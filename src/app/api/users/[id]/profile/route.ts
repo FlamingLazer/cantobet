@@ -3,15 +3,16 @@ import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase-
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
 
-  if (params.id !== user.id) {
+  if (id !== user.id) {
     const { data: profile } = await service
       .from('users')
       .select('is_admin')
@@ -29,26 +30,26 @@ export async function GET(
     { data: watchSessions },
     { data: ledger },
   ] = await Promise.all([
-    service.from('users').select('*').eq('id', params.id).single(),
+    service.from('users').select('*').eq('id', id).single(),
     service
       .from('bets')
       .select(`*, race_runner:race_runners(id, odds, runner:runners(username, character), race:races(week, rung, status, scheduled_at))`)
-      .eq('user_id', params.id)
+      .eq('user_id', id)
       .order('placed_at', { ascending: false }),
     service
       .from('futures_bets')
       .select('*, runner:runners(username, character)')
-      .eq('user_id', params.id)
+      .eq('user_id', id)
       .order('placed_at', { ascending: false }),
     service
       .from('watch_sessions')
       .select('*')
-      .eq('user_id', params.id)
+      .eq('user_id', id)
       .order('started_at', { ascending: false }),
     service
       .from('studs_ledger')
       .select('amount, reason')
-      .eq('user_id', params.id),
+      .eq('user_id', id),
   ])
 
   const watchStudsEarned = ledger
