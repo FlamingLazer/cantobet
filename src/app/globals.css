@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --navy: #1a1f2e;
+  --navy2: #222840;
+  --navy3: #2a3050;
+  --navy4: #323a5a;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --red-bg: #2a1515;
+  --red-border: #6e2020;
+  --white: #f0f2f8;
+  --muted: #8890b0;
+  --dim: #4a5070;
+  --gold: #d4aa3a;
+  --gold-bg: #1e1a08;
+  --gold-dim: #7a6020;
+  --green: #27ae60;
+  --green-bg: #0d1a0d;
+  --green-border: #1a4020;
+  --blue: #3a7bd5;
+  --blue-bg: #0d1828;
+  --blue-border: #1e3a6a;
+  --orange: #e67e22;
+  --orange-bg: #1e1208;
+  --orange-border: #6e3808;
+  --border: #2a3050;
+  --borderb: #3d4670;
+}
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: 'Barlow', sans-serif;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
