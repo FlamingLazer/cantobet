@@ -13,6 +13,45 @@ import WatchEarn from './components/WatchEarn'
 import StreamEmbed from './components/StreamEmbed'
 import { useHeartbeat } from '@/hooks/useHeartbeat'
 
+const channel = 'lazer_flaming'
+
+const formatBox = (
+  <div style={{
+    background: 'var(--navy3)',
+    border: '0.5px solid var(--borderb)',
+    borderRadius: '7px',
+    padding: '9px 12px',
+    marginBottom: '10px',
+  }}>
+    <div style={{
+      fontSize: '12px', fontWeight: 700, color: 'var(--white)',
+      marginBottom: '3px',
+      fontFamily: "'Barlow Condensed', sans-serif",
+      letterSpacing: '.5px', textTransform: 'uppercase',
+    }}>
+      1v1v1 · Ladder League
+    </div>
+    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+      3 runners race simultaneously — fastest time wins. Bet on who wins each race. Betting closes when the race starts.
+    </div>
+    <div style={{ display: 'flex', gap: '5px', marginTop: '6px', flexWrap: 'wrap' }}>
+      {[
+        { label: '🥇 1st → moves up / qualifies', bg: '#1a1608', color: 'var(--gold)', border: 'var(--gold-dim)' },
+        { label: '🥈 2nd → moves up', bg: 'var(--blue-bg)', color: 'var(--blue)', border: 'var(--blue-border)' },
+        { label: '🥉 3rd → drops down', bg: 'var(--red-bg)', color: 'var(--red2)', border: 'var(--red-border)' },
+      ].map(p => (
+        <span key={p.label} style={{
+          fontSize: '10px', fontWeight: 700, padding: '2px 8px',
+          borderRadius: '10px', background: p.bg, color: p.color,
+          border: `1px solid ${p.border}`,
+        }}>
+          {p.label}
+        </span>
+      ))}
+    </div>
+  </div>
+)
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('races')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -21,8 +60,6 @@ export default function Home() {
   const [watchKey, setWatchKey] = useState(0)
   const [isLive, setIsLive] = useState(false)
   const supabase = createClient()
-
-  const channel = 'lazer_flaming'
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -59,6 +96,8 @@ export default function Home() {
     onStudsCredited: handleStudsCredited,
   })
 
+  const showStream = activeTab === 'races' || activeTab === 'futures'
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--navy)' }}>
       <Header
@@ -82,9 +121,19 @@ export default function Home() {
         alignItems: 'start',
       }}>
         <main>
-          <StreamEmbed isLive={isLive} channel={channel} />
-          {activeTab === 'races' && <RacesFeed />}
-          {activeTab === 'futures' && <FuturesFeed />}
+          {activeTab === 'races' && (
+            <>
+              {formatBox}
+              <StreamEmbed isLive={isLive} channel={channel} />
+              <RacesFeed hideFormatBox />
+            </>
+          )}
+          {activeTab === 'futures' && (
+            <>
+              <StreamEmbed isLive={isLive} channel={channel} />
+              <FuturesFeed />
+            </>
+          )}
           {activeTab === 'history' && <HistoryFeed />}
           {activeTab === 'leaderboard' && <Leaderboard />}
           {activeTab === 'admin' && <AdminPanel />}
