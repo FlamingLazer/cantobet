@@ -27,6 +27,7 @@ export async function GET(
     { data: userData },
     { data: bets },
     { data: futuresBets },
+    { data: parlayBets },
     { data: watchSessions },
     { data: ledger },
   ] = await Promise.all([
@@ -39,6 +40,11 @@ export async function GET(
     service
       .from('futures_bets')
       .select('*, runner:runners(username, character)')
+      .eq('user_id', id)
+      .order('placed_at', { ascending: false }),
+    service
+      .from('parlay_bets')
+      .select('*')
       .eq('user_id', id)
       .order('placed_at', { ascending: false }),
     service
@@ -61,7 +67,14 @@ export async function GET(
   const settledWon = settledBets
     .filter((b: { status: string }) => b.status === 'won')
     .reduce((sum: number, b: { potential_payout: number }) => sum + b.potential_payout, 0)
-  const betProfitLoss = settledWon - settledWagered
+
+  const settledParlays = parlayBets?.filter((b: { status: string }) => b.status !== 'pending') ?? []
+  const settledParlayWagered = settledParlays.reduce((sum: number, b: { wager: number }) => sum + b.wager, 0)
+  const settledParlayWon = settledParlays
+    .filter((b: { status: string }) => b.status === 'won')
+    .reduce((sum: number, b: { potential_payout: number }) => sum + b.potential_payout, 0)
+
+  const betProfitLoss = (settledWon - settledWagered) + (settledParlayWon - settledParlayWagered)
 
   const totalWatchMinutes = watchSessions
     ?.reduce((sum: number, s: { studs_credited: number }) => sum + s.studs_credited / 10, 0) ?? 0
@@ -76,6 +89,7 @@ export async function GET(
     },
     bets: bets ?? [],
     futures_bets: futuresBets ?? [],
+    parlay_bets: parlayBets ?? [],
     watch_sessions: watchSessions ?? [],
   })
 }

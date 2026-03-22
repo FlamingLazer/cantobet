@@ -16,6 +16,24 @@ interface Bet {
   }
 }
 
+interface ParlayBet {
+  id: string
+  wager: number
+  combined_odds: number
+  potential_payout: number
+  status: 'pending' | 'won' | 'lost'
+  bet_type: string
+  legs: {
+    race_runner_id?: string
+    odds: number
+    runner_username?: string
+    race_week?: number
+    race_rung?: number
+    status?: string
+  }[]
+  placed_at: string
+}
+
 interface WatchSession {
   id: string
   started_at: string
@@ -30,6 +48,7 @@ interface ProfileData {
     total_watch_minutes: number
   }
   bets: Bet[]
+  parlay_bets: ParlayBet[]
   watch_sessions: WatchSession[]
 }
 
@@ -148,35 +167,104 @@ export default function ProfileModal({
                   <div style={{ display: 'grid', gridTemplateColumns: '85px 1fr 55px 60px 65px', gap: '6px', padding: '0 0 6px', borderBottom: '0.5px solid var(--border)', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>
                     <span>Race</span><span>Pick</span><span style={{ textAlign: 'right' }}>Wager</span><span style={{ textAlign: 'right' }}>Odds</span><span style={{ textAlign: 'right' }}>Result</span>
                   </div>
-                  {!data?.bets.length ? (
+
+                  {!data?.bets.length && !data?.parlay_bets.length ? (
                     <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--dim)', fontSize: '12px' }}>No bets yet</div>
-                  ) : data.bets.map(bet => {
-                    const race = bet.race_runner?.race
-                    const runner = bet.race_runner?.runner
-                    const resultColor = bet.status === 'won' ? 'var(--green)' : bet.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
-                    const resultText = bet.status === 'won' ? `+${(bet.potential_payout - bet.wager).toLocaleString()}` : bet.status === 'lost' ? `-${bet.wager.toLocaleString()}` : '—'
-                    const pillBg = bet.status === 'won' ? 'var(--green-bg)' : bet.status === 'lost' ? 'var(--red-bg)' : 'var(--navy4)'
-                    const pillColor = bet.status === 'won' ? 'var(--green)' : bet.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
-                    return (
-                      <div key={bet.id} style={{ display: 'grid', gridTemplateColumns: '85px 1fr 55px 60px 65px', gap: '6px', alignItems: 'center', padding: '6px 0', borderBottom: '0.5px solid var(--border)', fontSize: '12px' }}>
-                        <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
-                          {race ? `W${race.week} · R${race.rung}` : 'Futures'}
-                        </div>
-                        <div>
-                          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {runner?.username ?? '—'}
-                            <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: pillBg, color: pillColor }}>
-                              {bet.status.toUpperCase()}
-                            </span>
+                  ) : (
+                    <>
+                      {/* Straight bets */}
+                      {(data?.bets ?? []).map(bet => {
+                        const race = bet.race_runner?.race
+                        const runner = bet.race_runner?.runner
+                        const resultColor = bet.status === 'won' ? 'var(--green)' : bet.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
+                        const resultText = bet.status === 'won' ? `+${(bet.potential_payout - bet.wager).toLocaleString()}` : bet.status === 'lost' ? `-${bet.wager.toLocaleString()}` : '—'
+                        const pillBg = bet.status === 'won' ? 'var(--green-bg)' : bet.status === 'lost' ? 'var(--red-bg)' : 'var(--navy4)'
+                        const pillColor = bet.status === 'won' ? 'var(--green)' : bet.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
+                        return (
+                          <div key={bet.id} style={{ display: 'grid', gridTemplateColumns: '85px 1fr 55px 60px 65px', gap: '6px', alignItems: 'center', padding: '6px 0', borderBottom: '0.5px solid var(--border)', fontSize: '12px' }}>
+                            <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
+                              {race ? `W${race.week} · R${race.rung}` : 'Futures'}
+                            </div>
+                            <div>
+                              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                {runner?.username ?? '—'}
+                                <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: pillBg, color: pillColor }}>
+                                  {bet.status.toUpperCase()}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--dim)' }}>wins race</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>{bet.wager.toLocaleString()}</div>
+                            <div style={{ textAlign: 'right', color: 'var(--muted)' }}>{bet.odds_at_placement}x</div>
+                            <div style={{ textAlign: 'right', fontWeight: 700, color: resultColor }}>{resultText}</div>
                           </div>
-                          <div style={{ fontSize: '10px', color: 'var(--dim)' }}>wins race</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>{bet.wager.toLocaleString()}</div>
-                        <div style={{ textAlign: 'right', color: 'var(--muted)' }}>{bet.odds_at_placement}x</div>
-                        <div style={{ textAlign: 'right', fontWeight: 700, color: resultColor }}>{resultText}</div>
-                      </div>
-                    )
-                  })}
+                        )
+                      })}
+
+                      {/* Parlay bets */}
+                      {(data?.parlay_bets ?? []).map(parlay => {
+                        const resultColor = parlay.status === 'won' ? 'var(--green)' : parlay.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
+                        const resultText = parlay.status === 'won'
+                          ? `+${(parlay.potential_payout - parlay.wager).toLocaleString()}`
+                          : parlay.status === 'lost'
+                          ? `-${parlay.wager.toLocaleString()}`
+                          : '—'
+                        const pillBg = parlay.status === 'won' ? 'var(--green-bg)' : parlay.status === 'lost' ? 'var(--red-bg)' : 'var(--navy4)'
+                        const pillColor = parlay.status === 'won' ? 'var(--green)' : parlay.status === 'lost' ? 'var(--red2)' : 'var(--muted)'
+
+                        return (
+                          <div key={parlay.id} style={{ padding: '6px 0', borderBottom: '0.5px solid var(--border)', fontSize: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span style={{
+                                  fontSize: '9px', fontWeight: 800,
+                                  padding: '1px 5px', borderRadius: '3px',
+                                  background: 'var(--gold-bg)', color: 'var(--gold)',
+                                  border: '1px solid var(--gold-dim)',
+                                }}>
+                                  {parlay.legs.length}-LEG PARLAY
+                                </span>
+                                <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: pillBg, color: pillColor }}>
+                                  {parlay.status.toUpperCase()}
+                                </span>
+                              </div>
+                              <span style={{ fontWeight: 700, color: resultColor }}>{resultText}</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              {parlay.legs.map((leg, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--muted)' }}>
+                                  <span style={{
+                                    fontSize: '9px',
+                                    color: leg.status === 'won' ? 'var(--green)'
+                                      : leg.status === 'lost' ? 'var(--red2)'
+                                      : 'var(--dim)',
+                                  }}>
+                                    {leg.status === 'won' ? '✓' : leg.status === 'lost' ? '✕' : '•'}
+                                  </span>
+                                  <span style={{
+                                    color: leg.status === 'won' ? 'var(--green)'
+                                      : leg.status === 'lost' ? 'var(--red2)'
+                                      : 'var(--white)',
+                                  }}>
+                                    {leg.runner_username ?? `Leg ${i + 1}`} wins
+                                  </span>
+                                  {leg.race_week && (
+                                    <span style={{ color: 'var(--dim)', fontSize: '10px' }}>
+                                      W{leg.race_week} · R{leg.race_rung}
+                                    </span>
+                                  )}
+                                  <span style={{ color: 'var(--gold)', marginLeft: 'auto' }}>{leg.odds}x</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: '10px', color: 'var(--dim)', marginTop: '4px' }}>
+                              {parlay.wager.toLocaleString()} wagered · {parlay.combined_odds.toFixed(2)}x combined · {parlay.potential_payout.toLocaleString()} potential
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  )}
                 </div>
               </div>
 
