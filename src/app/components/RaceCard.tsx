@@ -1,13 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import type { RaceWithRunners, RaceRunner } from '@/types'
 
 interface RaceCardProps {
   race: RaceWithRunners
   userBets: Record<string, string>
   onBetPlaced: (raceRunnerId: string, raceId: string) => void
-  isEliminationRung?: boolean
   slipPicks: string[]
   onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
   onRemoveFromSlip: (id: string) => void
@@ -47,7 +45,6 @@ export default function RaceCard({
   race,
   userBets,
   onBetPlaced,
-  isEliminationRung = false,
   slipPicks,
   onAddToSlip,
   onRemoveFromSlip,
@@ -56,6 +53,9 @@ export default function RaceCard({
   const isLocked = race.status === 'locked'
   const isPast = new Date(race.scheduled_at) <= new Date()
   const existingBet = userBets[race.id]
+
+  const eliminationRung = 8 - race.week
+  const isEliminationRung = race.rung === eliminationRung
 
   const rungNote = race.rung === 1
     ? 'Winner qualifies for Top 8'

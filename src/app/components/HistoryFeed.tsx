@@ -57,11 +57,9 @@ function Flag({ code }: { code?: string | null }) {
 function RaceDoneCard({
   race,
   userBets,
-  isEliminationRung = false,
 }: {
   race: RaceResult
   userBets: UserBetResult[]
-  isEliminationRung?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const rungStyle = rungColors[race.rung] ?? rungColors[7]
@@ -71,7 +69,10 @@ function RaceDoneCard({
   )
   const winner = sorted[0]
   const userBet = userBets.find(b => b.race_runner?.race_id === race.id)
+
   const rung1Note = race.rung === 1
+  const eliminationRung = 8 - race.week
+  const isElimRung = race.rung === eliminationRung
 
   return (
     <div style={{
@@ -138,7 +139,7 @@ function RaceDoneCard({
             flexShrink: 0,
           }}>QUALIFIED</span>
         )}
-        {isEliminationRung && !rung1Note && (
+        {isElimRung && !rung1Note && (
           <span style={{
             fontSize: '9px', fontWeight: 700,
             padding: '1px 6px', borderRadius: '3px',
@@ -147,7 +148,7 @@ function RaceDoneCard({
             flexShrink: 0,
           }}>2 ELIMINATED</span>
         )}
-        {!rung1Note && !isEliminationRung && (
+        {!rung1Note && !isElimRung && (
           <span style={{
             fontSize: '9px', fontWeight: 700,
             padding: '1px 6px', borderRadius: '3px',
@@ -172,22 +173,30 @@ function RaceDoneCard({
               ? 'var(--gold)'
               : i === 1 ? 'var(--blue)' : 'var(--red2)'
 
-            const badge = i === 0
-              ? rung1Note ? 'QUALIFIES' : '↑ MOVES UP'
-              : i === 1
-              ? isEliminationRung ? 'ELIMINATED' : '↑ MOVES UP'
-              : isEliminationRung ? 'ELIMINATED' : '↓ DROPS'
+            const isStaying = i === 1 && rung1Note
+            const isEliminated = (i === 2 && isElimRung) || (i === 1 && isElimRung)
+            const isQualifying = i === 0 && rung1Note
 
-            const badgeBg = (i === 0 && rung1Note) ? '#1a1208'
-              : (i === 2 || (i === 1 && isEliminationRung)) ? 'var(--red-bg)'
+            const badge = isQualifying ? 'QUALIFIES'
+              : isStaying ? '— STAYS'
+              : i === 0 ? '↑ MOVES UP'
+              : isEliminated ? 'ELIMINATED'
+              : i === 1 ? '↑ MOVES UP'
+              : '↓ DROPS'
+
+            const badgeBg = isQualifying ? '#1a1208'
+              : isEliminated ? 'var(--red-bg)'
+              : isStaying ? 'var(--navy4)'
               : 'var(--green-bg)'
 
-            const badgeColor = (i === 0 && rung1Note) ? 'var(--gold)'
-              : (i === 2 || (i === 1 && isEliminationRung)) ? 'var(--red2)'
+            const badgeColor = isQualifying ? 'var(--gold)'
+              : isEliminated ? 'var(--red2)'
+              : isStaying ? 'var(--muted)'
               : 'var(--green)'
 
-            const badgeBorder = (i === 0 && rung1Note) ? 'var(--gold-dim)'
-              : (i === 2 || (i === 1 && isEliminationRung)) ? 'var(--red-border)'
+            const badgeBorder = isQualifying ? 'var(--gold-dim)'
+              : isEliminated ? 'var(--red-border)'
+              : isStaying ? 'var(--border)'
               : 'var(--green-border)'
 
             return (
@@ -277,7 +286,6 @@ export default function HistoryFeed() {
   const [userBets, setUserBets] = useState<UserBetResult[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({})
-  const [maxRungByWeek, setMaxRungByWeek] = useState<Record<number, number>>({})
   const supabase = createClient()
 
   useEffect(() => {
@@ -298,17 +306,7 @@ export default function HistoryFeed() {
       .eq('status', 'settled')
       .order('scheduled_at', { ascending: false })
 
-    const raceData = (data as unknown as RaceResult[]) ?? []
-
-    const maxRungs: Record<number, number> = {}
-    raceData.forEach(r => {
-      if (!maxRungs[r.week] || r.rung > maxRungs[r.week]) {
-        maxRungs[r.week] = r.rung
-      }
-    })
-
-    setMaxRungByWeek(maxRungs)
-    setRaces(raceData)
+    setRaces((data as unknown as RaceResult[]) ?? [])
     setLoading(false)
   }
 
@@ -391,7 +389,6 @@ export default function HistoryFeed() {
                 key={race.id}
                 race={race}
                 userBets={userBets}
-                isEliminationRung={race.rung === maxRungByWeek[race.week]}
               />
             ))}
 

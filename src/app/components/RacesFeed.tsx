@@ -126,7 +126,6 @@ export default function RacesFeed({
 
       {weeks.map(week => {
         const weekRaces = byWeek[week]
-        const maxRung = Math.max(...weekRaces.map(r => r.rung))
 
         return (
           <div key={week} style={{ marginBottom: '20px' }}>
@@ -150,7 +149,6 @@ export default function RacesFeed({
                 race={race}
                 userBets={userBets}
                 onBetPlaced={handleBetPlaced}
-                isEliminationRung={race.rung === maxRung}
                 slipPicks={slipPicks}
                 onAddToSlip={onAddToSlip}
                 onRemoveFromSlip={onRemoveFromSlip}
