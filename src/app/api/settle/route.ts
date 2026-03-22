@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No 1st place result provided' }, { status: 400 })
   }
 
+  // ── 1. Write finish times + positions ──────────────────────────────────────
   for (const result of results) {
     await service
       .from('race_runners')
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
       .eq('id', result.race_runner_id)
   }
 
+  // ── 2. Mark race settled ───────────────────────────────────────────────────
   const { data: winnerRR } = await service
     .from('race_runners')
     .select('runner_id, runner:runners(username)')
@@ -71,6 +73,7 @@ export async function POST(req: NextRequest) {
 
   const allRaceRunnerIds = results.map(r => r.race_runner_id)
 
+  // ── 3. Settle straight bets ────────────────────────────────────────────────
   const { data: bets } = await service
     .from('bets')
     .select('*')
@@ -108,6 +111,79 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── 4. Settle parlay legs ──────────────────────────────────────────────────
+  // Find all pending race parlays that contain any of these race_runner_ids
+  const { data: parlays } = await service
+    .from('parlay_bets')
+    .select('*')
+    .eq('status', 'pending')
+    .eq('bet_type', 'race')
+
+  if (parlays?.length) {
+    for (const parlay of parlays) {
+      const legs = parlay.legs as {
+        race_runner_id: string
+        odds: number
+        runner_username: string
+        race_week: number
+        race_rung: number
+        status: string
+      }[]
+
+      // Check if any legs belong to this race
+      const hasLegsInThisRace = legs.some(leg =>
+        allRaceRunnerIds.includes(leg.race_runner_id)
+      )
+      if (!hasLegsInThisRace) continue
+
+      // Update leg statuses
+      const updatedLegs = legs.map(leg => {
+        if (!allRaceRunnerIds.includes(leg.race_runner_id)) {
+          return leg // not part of this race, unchanged
+        }
+        const isWinningLeg = leg.race_runner_id === winnerResult.race_runner_id
+        return { ...leg, status: isWinningLeg ? 'won' : 'lost' }
+      })
+
+      // Check overall parlay status
+      const anyLost = updatedLegs.some(leg => leg.status === 'lost')
+      const allWon = updatedLegs.every(leg => leg.status === 'won')
+
+      if (anyLost) {
+        // Parlay is busted
+        await service
+          .from('parlay_bets')
+          .update({ status: 'lost', legs: updatedLegs })
+          .eq('id', parlay.id)
+      } else if (allWon) {
+        // All legs won — pay out
+        await service
+          .from('parlay_bets')
+          .update({ status: 'won', legs: updatedLegs })
+          .eq('id', parlay.id)
+
+        const { error } = await mutateStuds({
+          supabase: service,
+          user_id: parlay.user_id,
+          amount: parlay.potential_payout,
+          reason: 'bet_won',
+          ref_id: parlay.id,
+        })
+        if (!error) {
+          paidOut += parlay.potential_payout
+          winners++
+        }
+      } else {
+        // Some legs still pending — just update leg statuses
+        await service
+          .from('parlay_bets')
+          .update({ legs: updatedLegs })
+          .eq('id', parlay.id)
+      }
+    }
+  }
+
+  // ── 5. Audit log ──────────────────────────────────────────────────────────
   const winnerUsername = (winnerRR?.runner as { username?: string } | null)?.username ?? 'unknown'
 
   await writeAuditLog({
