@@ -44,6 +44,7 @@ export default function AdminPanel() {
   const [activeSection, setActiveSection] = useState<'races' | 'settle' | 'futures' | 'users' | 'audit'>('races')
   const [runners, setRunners] = useState<Runner[]>([])
   const [races, setRaces] = useState<RaceRow[]>([])
+  const [settledRaces, setSettledRaces] = useState<RaceRow[]>([])
   const [users, setUsers] = useState<UserRow[]>([])
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([])
   const [auditFilter, setAuditFilter] = useState('')
@@ -53,7 +54,6 @@ export default function AdminPanel() {
   const [settling, setSettling] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Create race form
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
   const [newTime, setNewTime] = useState('')
@@ -64,7 +64,6 @@ export default function AdminPanel() {
   ])
   const [creating, setCreating] = useState(false)
 
-  // Studs adjustment
   const [adjUsername, setAdjUsername] = useState('')
   const [adjAmount, setAdjAmount] = useState('')
   const [adjReason, setAdjReason] = useState('')
@@ -75,6 +74,7 @@ export default function AdminPanel() {
   useEffect(() => {
     fetchRunners()
     fetchRaces()
+    fetchSettledRaces()
     fetchUsers()
     fetchAudit()
   }, [])
@@ -98,6 +98,19 @@ export default function AdminPanel() {
       .neq('status', 'settled')
       .order('scheduled_at')
     setRaces((data as unknown as RaceRow[]) ?? [])
+  }
+
+  async function fetchSettledRaces() {
+    const { data } = await supabase
+      .from('races')
+      .select(`
+        id, week, rung, scheduled_at, status,
+        race_runners(id, odds, finish_position, runner:runners(username))
+      `)
+      .eq('status', 'settled')
+      .order('scheduled_at', { ascending: false })
+      .limit(10)
+    setSettledRaces((data as unknown as RaceRow[]) ?? [])
   }
 
   async function fetchUsers() {
@@ -156,10 +169,14 @@ export default function AdminPanel() {
   }
 
   async function deleteRace(raceId: string) {
-    const { error } = await supabase.from('races').delete().eq('id', raceId)
-    if (!error) {
+    const res = await fetch(`/api/races/${raceId}`, { method: 'DELETE' })
+    if (res.ok) {
       showToast('Race deleted')
       fetchRaces()
+      fetchAudit()
+    } else {
+      const data = await res.json()
+      showToast(`Error: ${data.error}`)
     }
   }
 
@@ -191,11 +208,29 @@ export default function AdminPanel() {
       setSettleRaceId(null)
       setSettleResults({})
       fetchRaces()
+      fetchSettledRaces()
       fetchAudit()
     } else {
       showToast(`Error: ${data.error}`)
     }
     setSettling(false)
+  }
+
+  async function unsettleRace(raceId: string) {
+    const res = await fetch('/api/unsettle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ race_id: raceId }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      showToast(`Unsettled — ${data.reversals} bet${data.reversals !== 1 ? 's' : ''} reversed`)
+      fetchRaces()
+      fetchSettledRaces()
+      fetchAudit()
+    } else {
+      showToast(`Error: ${data.error}`)
+    }
   }
 
   async function toggleAdmin(userId: string, current: boolean) {
@@ -261,10 +296,8 @@ export default function AdminPanel() {
       {label}
     </button>
   )
-
   return (
     <div>
-      {/* Admin badge */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         marginBottom: '16px',
@@ -278,7 +311,6 @@ export default function AdminPanel() {
         }}>ADMIN PANEL</div>
       </div>
 
-      {/* Section tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {sectionBtn('races', 'Create Race')}
         {sectionBtn('settle', 'Settle Races')}
@@ -481,6 +513,58 @@ export default function AdminPanel() {
               )}
             </div>
           ))}
+
+          {/* Recently Settled */}
+          {settledRaces.length > 0 && (
+            <div style={{ marginTop: '14px' }}>
+              <div style={{
+                fontSize: '10px', fontWeight: 700,
+                letterSpacing: '1px', textTransform: 'uppercase',
+                color: 'var(--dim)', marginBottom: '8px',
+              }}>
+                Recently Settled
+              </div>
+              {settledRaces.map(race => (
+                <div key={race.id} style={{
+                  background: 'var(--navy3)',
+                  border: '0.5px solid var(--border)',
+                  borderRadius: '6px',
+                  padding: '10px 12px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  opacity: 0.8,
+                }}>
+                  <div>
+                    <div style={{
+                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: '14px', fontWeight: 800,
+                    }}>
+                      W{race.week} · Rung {race.rung}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                      {race.race_runners.map(rr => rr.runner?.username).join(' · ')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => unsettleRace(race.id)}
+                    style={{
+                      padding: '5px 10px',
+                      background: 'var(--orange-bg)',
+                      color: 'var(--orange)',
+                      border: '0.5px solid var(--orange-border)',
+                      borderRadius: '5px',
+                      fontSize: '12px', fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Unsettle
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -552,7 +636,6 @@ export default function AdminPanel() {
             ))}
           </div>
 
-          {/* Manual Studs adjustment */}
           <div style={{
             background: 'var(--navy2)', border: '0.5px solid var(--border)',
             borderRadius: '8px', padding: '14px',
@@ -704,7 +787,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', bottom: '20px', right: '20px',
@@ -727,7 +809,6 @@ export default function AdminPanel() {
   )
 }
 
-// Separate component for futures odds management
 function FuturesOddsPanel({ onToast, onRefresh }: { onToast: (msg: string) => void; onRefresh: () => void }) {
   const [markets, setMarkets] = useState<{ id: string; market: string; odds: number | null; runner: { username: string } | null }[]>([])
   const [odds, setOdds] = useState<Record<string, string>>({})
@@ -758,15 +839,6 @@ function FuturesOddsPanel({ onToast, onRefresh }: { onToast: (msg: string) => vo
     onToast('Futures odds updated')
     onRefresh()
     setSaving(false)
-  }
-
-  async function addMarket(market: 'champion' | 'top8_qualification', runner_id: string) {
-    await supabase.from('futures_markets').insert({ market, runner_id })
-    const { data } = await supabase
-      .from('futures_markets')
-      .select('id, market, odds, runner:runners(username)')
-      .order('market')
-    setMarkets((data as unknown as typeof markets) ?? [])
   }
 
   return (
