@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
 
-  // Check balance
   const { data: profile } = await service
     .from('users')
     .select('studs_balance')
@@ -27,22 +26,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Insufficient Studs' }, { status: 409 })
   }
 
-  // Validate all picks are open races
+  // Validate picks and collect leg details
+  const legs = []
   for (const pick of picks) {
     const { data: rr } = await service
       .from('race_runners')
-      .select('*, race:races(status, scheduled_at)')
+      .select('*, race:races(week, rung, status, scheduled_at), runner:runners(username)')
       .eq('id', pick.id)
       .single()
 
-    if (!rr) return NextResponse.json({ error: `Pick not found: ${pick.id}` }, { status: 404 })
+    if (!rr) return NextResponse.json({ error: `Pick not found` }, { status: 404 })
     if (rr.race.status !== 'open') return NextResponse.json({ error: 'One or more races are locked' }, { status: 409 })
     if (new Date(rr.race.scheduled_at) <= new Date()) return NextResponse.json({ error: 'One or more races have started' }, { status: 409 })
+
+    legs.push({
+      race_runner_id: pick.id,
+      odds: pick.odds,
+      runner_username: rr.runner?.username ?? '—',
+      race_week: rr.race.week,
+      race_rung: rr.race.rung,
+      status: 'pending',
+    })
   }
 
   const potential_payout = Math.floor(wager * combined_odds)
 
-  // Insert parlay bet
   const { data: bet, error: betError } = await service
     .from('parlay_bets')
     .insert({
@@ -51,10 +59,8 @@ export async function POST(req: NextRequest) {
       combined_odds,
       potential_payout,
       status: 'pending',
-      legs: picks.map((p: { id: string; odds: number }) => ({
-        race_runner_id: p.id,
-        odds: p.odds,
-      })),
+      bet_type: 'race',
+      legs,
     })
     .select()
     .single()

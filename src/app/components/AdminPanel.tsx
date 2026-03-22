@@ -234,14 +234,20 @@ export default function AdminPanel() {
   }
 
   async function toggleAdmin(userId: string, current: boolean) {
-    await supabase
-      .from('users')
-      .update({ is_admin: !current })
-      .eq('id', userId)
+  const res = await fetch('/api/admin/toggle-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, is_admin: !current }),
+  })
+  if (res.ok) {
     fetchUsers()
     fetchAudit()
     showToast(`Admin access ${!current ? 'granted' : 'removed'}`)
+  } else {
+    const data = await res.json()
+    showToast(`Error: ${data.error}`)
   }
+}
 
   async function applyStudsAdjustment() {
     const user = users.find(u => u.twitch_username.toLowerCase() === adjUsername.toLowerCase())

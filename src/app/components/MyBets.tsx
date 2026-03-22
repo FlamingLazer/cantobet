@@ -35,7 +35,15 @@ interface ParlayBet {
   potential_payout: number
   status: 'pending' | 'won' | 'lost'
   bet_type: string
-  legs: { race_runner_id?: string; futures_market_id?: string; odds: number }[]
+  legs: {
+    race_runner_id?: string
+    futures_market_id?: string
+    odds: number
+    runner_username?: string
+    race_week?: number
+    race_rung?: number
+    status?: 'pending' | 'won' | 'lost'
+  }[]
   placed_at: string
 }
 
@@ -172,71 +180,172 @@ export default function MyBets() {
   }
 
   function ParlayRow({ parlay }: { parlay: ParlayBet }) {
-    const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
+
+  const legStatusIcon = (status: string) => {
+    if (status === 'won') return (
+      <div style={{
+        width: '18px', height: '18px', borderRadius: '50%',
+        background: 'var(--green-bg)', border: '1px solid var(--green-border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: '10px', color: 'var(--green)',
+      }}>✓</div>
+    )
+    if (status === 'lost') return (
+      <div style={{
+        width: '18px', height: '18px', borderRadius: '50%',
+        background: 'var(--red-bg)', border: '1px solid var(--red-border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: '10px', color: 'var(--red2)',
+      }}>✕</div>
+    )
     return (
       <div style={{
-        background: 'var(--navy2)',
-        border: `0.5px solid ${parlay.status === 'pending' ? 'var(--gold-dim)' : 'var(--border)'}`,
-        borderRadius: '7px',
-        marginBottom: '6px',
-        overflow: 'hidden',
-      }}>
-        <div
-          onClick={() => setOpen(!open)}
-          style={{
-            padding: '10px 12px',
-            display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center', cursor: 'pointer',
-          }}
-        >
-          <div>
-            <div style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: '14px', fontWeight: 700,
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
-              <span style={{
-                fontSize: '9px', fontWeight: 800,
-                padding: '1px 6px', borderRadius: '3px',
-                background: 'var(--gold-bg)', color: 'var(--gold)',
-                border: '1px solid var(--gold-dim)',
-              }}>
-                {parlay.legs.length}-LEG PARLAY
-              </span>
-              {parlay.bet_type === 'futures' ? 'Futures Parlay' : 'Race Parlay'}
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
-              {parlay.combined_odds.toFixed(2)}x combined · {parlay.wager.toLocaleString()} wagered
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{
-              fontSize: '14px', fontWeight: 700,
-              color: resultColor(parlay.status),
-            }}>
-              {resultText(parlay.status, parlay.wager, parlay.potential_payout)}
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
-              {open ? '▲' : '▼'}
-            </div>
-          </div>
-        </div>
-        {open && (
-          <div style={{ borderTop: '0.5px solid var(--border)', padding: '8px 12px' }}>
-            {parlay.legs.map((leg, i) => (
-              <div key={i} style={{
-                fontSize: '11px', color: 'var(--muted)',
-                padding: '3px 0',
-                borderBottom: i < parlay.legs.length - 1 ? '0.5px solid var(--border)' : 'none',
-              }}>
-                Leg {i + 1} · <span style={{ color: 'var(--gold)' }}>{leg.odds}x</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        width: '18px', height: '18px', borderRadius: '50%',
+        background: 'var(--navy3)', border: '1px solid var(--borderb)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontSize: '8px', color: 'var(--dim)',
+      }}>•</div>
     )
   }
+
+  const wonLegs = parlay.legs.filter((l: any) => l.status === 'won').length
+  const lostLegs = parlay.legs.filter((l: any) => l.status === 'lost').length
+  const pendingLegs = parlay.legs.filter((l: any) => l.status === 'pending').length
+
+  return (
+    <div style={{
+      background: 'var(--navy2)',
+      border: `0.5px solid ${
+        parlay.status === 'won' ? 'var(--green-border)'
+        : parlay.status === 'lost' ? 'var(--red-border)'
+        : 'var(--gold-dim)'
+      }`,
+      borderRadius: '7px',
+      marginBottom: '6px',
+      overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          padding: '10px 12px',
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', cursor: 'pointer',
+          background: 'var(--navy3)',
+        }}
+      >
+        <div>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: '14px', fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: '6px',
+          }}>
+            <span style={{
+              fontSize: '9px', fontWeight: 800,
+              padding: '1px 6px', borderRadius: '3px',
+              background: 'var(--gold-bg)', color: 'var(--gold)',
+              border: '1px solid var(--gold-dim)',
+            }}>
+              {parlay.legs.length}-LEG PARLAY
+            </span>
+            {parlay.bet_type === 'futures' ? 'Futures' : 'Race'} Parlay
+          </div>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', display: 'flex', gap: '8px' }}>
+            <span>{parlay.combined_odds.toFixed(2)}x</span>
+            <span>·</span>
+            <span>{parlay.wager.toLocaleString()} wagered</span>
+            <span>·</span>
+            {parlay.status === 'pending' && (
+              <span style={{ color: 'var(--muted)' }}>{wonLegs}/{parlay.legs.length} legs done</span>
+            )}
+            {parlay.status === 'won' && (
+              <span style={{ color: 'var(--green)', fontWeight: 700 }}>WON</span>
+            )}
+            {parlay.status === 'lost' && (
+              <span style={{ color: 'var(--red2)', fontWeight: 700 }}>LOST</span>
+            )}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div>
+            <div style={{
+              fontSize: '15px', fontWeight: 700,
+              color: parlay.status === 'won' ? 'var(--green)'
+                : parlay.status === 'lost' ? 'var(--red2)'
+                : 'var(--gold)',
+              fontFamily: "'Barlow Condensed', sans-serif",
+            }}>
+              {parlay.status === 'won'
+                ? `+${(parlay.potential_payout - parlay.wager).toLocaleString()}`
+                : parlay.status === 'lost'
+                ? `−${parlay.wager.toLocaleString()}`
+                : parlay.potential_payout.toLocaleString()
+              }
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
+              {parlay.status === 'pending' ? 'potential' : parlay.status}
+            </div>
+          </div>
+          <span style={{ fontSize: '10px', color: 'var(--dim)' }}>{open ? '▲' : '▼'}</span>
+        </div>
+      </div>
+
+      {/* Legs */}
+      {open && (
+        <div style={{ padding: '6px 12px 10px' }}>
+          {/* Progress bar */}
+          {parlay.status === 'pending' && parlay.legs.length > 0 && (
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{
+                height: '3px', background: 'var(--navy4)',
+                borderRadius: '2px', overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(wonLegs / parlay.legs.length) * 100}%`,
+                  background: lostLegs > 0 ? 'var(--red2)' : 'var(--green)',
+                  borderRadius: '2px',
+                  transition: 'width .4s ease',
+                }} />
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--dim)', marginTop: '3px' }}>
+                {wonLegs} won · {lostLegs} lost · {pendingLegs} pending
+              </div>
+            </div>
+          )}
+
+          {parlay.legs.map((leg: any, i: number) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '6px 0',
+              borderBottom: i < parlay.legs.length - 1 ? '0.5px solid var(--border)' : 'none',
+            }}>
+              {legStatusIcon(leg.status ?? 'pending')}
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: '13px', fontWeight: 700,
+                  color: leg.status === 'won' ? 'var(--green)'
+                    : leg.status === 'lost' ? 'var(--red2)'
+                    : 'var(--white)',
+                }}>
+                  {leg.runner_username ?? `Leg ${i + 1}`} wins
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
+                  {leg.race_week ? `W${leg.race_week} · Rung ${leg.race_rung}` : ''}
+                </div>
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gold)' }}>
+                {leg.odds}x
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
   if (loading) {
     return <div style={{ color: 'var(--muted)', padding: '40px', textAlign: 'center' }}>Loading bets...</div>
