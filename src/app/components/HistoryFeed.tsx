@@ -13,6 +13,8 @@ interface RaceResult {
     id: string
     finish_position: number | null
     finish_time: string | null
+    leapfrog: boolean
+    leapfrogged: boolean
     runner: {
       username: string
       character: string
@@ -176,8 +178,12 @@ function RaceDoneCard({
             const isStaying = i === 1 && rung1Note
             const isEliminated = (i === 2 && isElimRung) || (i === 1 && isElimRung)
             const isQualifying = i === 0 && rung1Note
+            const isLeapfrog = rr.leapfrog === true
+            const isLeapfrogged = rr.leapfrogged === true
 
             const badge = isQualifying ? 'QUALIFIES'
+              : isLeapfrog ? '⚡ LEAPFROG'
+              : isLeapfrogged ? '↔ LEAPFROGGED'
               : isStaying ? '— STAYS'
               : i === 0 ? '↑ MOVES UP'
               : isEliminated ? 'ELIMINATED'
@@ -185,18 +191,24 @@ function RaceDoneCard({
               : '↓ DROPS'
 
             const badgeBg = isQualifying ? '#1a1208'
+              : isLeapfrog ? '#0d1428'
+              : isLeapfrogged ? '#160d28'
               : isEliminated ? 'var(--red-bg)'
               : isStaying ? 'var(--navy4)'
               : i === 2 ? 'var(--red-bg)'
               : 'var(--green-bg)'
 
             const badgeColor = isQualifying ? 'var(--gold)'
+              : isLeapfrog ? '#4a9eff'
+              : isLeapfrogged ? '#9b6dff'
               : isEliminated ? 'var(--red2)'
               : isStaying ? 'var(--muted)'
               : i === 2 ? 'var(--red2)'
               : 'var(--green)'
 
             const badgeBorder = isQualifying ? 'var(--gold-dim)'
+              : isLeapfrog ? '#1e3a6a'
+              : isLeapfrogged ? '#3d1a6a'
               : isEliminated ? 'var(--red-border)'
               : isStaying ? 'var(--border)'
               : i === 2 ? 'var(--red-border)'
@@ -298,16 +310,16 @@ export default function HistoryFeed() {
 
   async function fetchHistory() {
     const { data } = await supabase
-      .from('races')
-      .select(`
-        id, week, rung, scheduled_at, winner_runner_id,
-        race_runners (
-          id, finish_position, finish_time,
-          runner:runners(username, character, country_code)
-        )
-      `)
-      .eq('status', 'settled')
-      .order('scheduled_at', { ascending: false })
+  .from('races')
+  .select(`
+    id, week, rung, scheduled_at, winner_runner_id,
+    race_runners (
+      id, finish_position, finish_time, leapfrog, leapfrogged,
+      runner:runners(username, character, country_code)
+    )
+  `)
+  .eq('status', 'settled')
+  .order('scheduled_at', { ascending: false })
 
     setRaces((data as unknown as RaceResult[]) ?? [])
     setLoading(false)
