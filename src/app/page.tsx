@@ -11,6 +11,8 @@ import FuturesFeed from './components/FuturesFeed'
 import AdminPanel from './components/AdminPanel'
 import WatchEarn from './components/WatchEarn'
 import StreamEmbed from './components/StreamEmbed'
+import BetSlip, { SlipPick } from './components/BetSlip'
+import MyBets from './components/MyBets'
 import { useHeartbeat } from '@/hooks/useHeartbeat'
 
 const channel = 'lazer_flaming'
@@ -59,6 +61,7 @@ export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [watchKey, setWatchKey] = useState(0)
   const [isLive, setIsLive] = useState(false)
+  const [slipPicks, setSlipPicks] = useState<SlipPick[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -81,6 +84,10 @@ export default function Home() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session?.user)
+      if (!session?.user) {
+        setIsAdmin(false)
+        setStudsBalance(0)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -96,7 +103,37 @@ export default function Home() {
     onStudsCredited: handleStudsCredited,
   })
 
-  const showStream = activeTab === 'races' || activeTab === 'futures'
+  function addToSlip(
+    id: string,
+    runner: string,
+    odds: number,
+    sublabel: string,
+    raceId?: string,
+    type: 'race' | 'future' = 'race',
+  ) {
+    // One pick per race
+    if (raceId) {
+      setSlipPicks(prev => {
+        const filtered = prev.filter(p => p.raceId !== raceId)
+        return [...filtered, { id, type, label: `${runner} wins`, sublabel, odds, raceId }]
+      })
+    } else {
+      setSlipPicks(prev => {
+        const filtered = prev.filter(p => p.id !== id)
+        return [...filtered, { id, type, label: runner, sublabel, odds }]
+      })
+    }
+  }
+
+  function removeFromSlip(id: string) {
+    setSlipPicks(prev => prev.filter(p => p.id !== id))
+  }
+
+  function clearSlip() {
+    setSlipPicks([])
+  }
+
+  const slipPickIds = slipPicks.map(p => p.id)
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--navy)' }}>
@@ -125,21 +162,45 @@ export default function Home() {
             <>
               {formatBox}
               <StreamEmbed isLive={isLive} channel={channel} />
-              <RacesFeed hideFormatBox />
+              <RacesFeed
+                hideFormatBox
+                slipPicks={slipPickIds}
+                onAddToSlip={(id, runner, odds, label, raceId) =>
+                  addToSlip(id, runner, odds, label, raceId, 'race')
+                }
+                onRemoveFromSlip={removeFromSlip}
+              />
             </>
           )}
           {activeTab === 'futures' && (
             <>
               <StreamEmbed isLive={isLive} channel={channel} />
-              <FuturesFeed />
+              <FuturesFeed
+                slipPicks={slipPickIds}
+                onAddToSlip={(id, runner, odds, sublabel) =>
+                  addToSlip(id, runner, odds, sublabel, undefined, 'future')
+                }
+                onRemoveFromSlip={removeFromSlip}
+              />
             </>
           )}
           {activeTab === 'history' && <HistoryFeed />}
+          {activeTab === 'my-bets' && <MyBets />}
           {activeTab === 'leaderboard' && <Leaderboard />}
           {activeTab === 'admin' && <AdminPanel />}
         </main>
 
-        <aside style={{ position: 'sticky', top: '68px' }}>
+        <aside style={{ position: 'sticky', top: '68px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <BetSlip
+            picks={slipPicks}
+            onRemove={removeFromSlip}
+            onClear={clearSlip}
+            onBetsPlaced={newBalance => {
+              setStudsBalance(newBalance)
+              setSlipPicks([])
+            }}
+            studsBalance={studsBalance}
+          />
           <WatchEarn
             key={watchKey}
             loggedIn={loggedIn}

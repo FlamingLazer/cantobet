@@ -8,6 +8,9 @@ interface RaceCardProps {
   userBets: Record<string, string>
   onBetPlaced: (raceRunnerId: string, raceId: string) => void
   isEliminationRung?: boolean
+  slipPicks: string[]
+  onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
+  onRemoveFromSlip: (id: string) => void
 }
 
 const rungColors: Record<number, { bg: string; color: string; border: string }> = {
@@ -45,12 +48,10 @@ export default function RaceCard({
   userBets,
   onBetPlaced,
   isEliminationRung = false,
+  slipPicks,
+  onAddToSlip,
+  onRemoveFromSlip,
 }: RaceCardProps) {
-  const [selectedRR, setSelectedRR] = useState<string | null>(null)
-  const [wager, setWager] = useState(200)
-  const [placing, setPlacing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const rungStyle = rungColors[race.rung] ?? rungColors[7]
   const isLocked = race.status === 'locked'
   const isPast = new Date(race.scheduled_at) <= new Date()
@@ -66,35 +67,6 @@ export default function RaceCard({
     weekday: 'short', month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
   })
-
-  async function placeBet() {
-    if (!selectedRR) return
-    setPlacing(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/bets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ race_runner_id: selectedRR, wager }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error)
-      } else {
-        onBetPlaced(selectedRR, race.id)
-        setSelectedRR(null)
-      }
-    } catch {
-      setError('Something went wrong')
-    } finally {
-      setPlacing(false)
-    }
-  }
-
-  const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
-  const potentialPayout = selectedRunner?.odds
-    ? Math.floor(wager * selectedRunner.odds)
-    : 0
 
   return (
     <div style={{
@@ -193,30 +165,47 @@ export default function RaceCard({
         borderTop: '0.5px solid var(--border)',
       }}>
         {race.race_runners.map((rr: RaceRunner) => {
-          const isSelected = selectedRR === rr.id
           const alreadyBet = existingBet === rr.id
+          const inSlip = slipPicks.includes(rr.id)
+          const anotherPickInThisRace = slipPicks.some(id =>
+            race.race_runners.some(r => r.id === id && r.id !== rr.id)
+          )
           const disabled = isLocked || isPast || !!existingBet
 
           return (
             <button
               key={rr.id}
               disabled={disabled}
-              onClick={() => setSelectedRR(isSelected ? null : rr.id)}
+              onClick={() => {
+                if (inSlip) {
+                  onRemoveFromSlip(rr.id)
+                } else {
+                  onAddToSlip(
+                    rr.id,
+                    rr.runner?.username ?? '',
+                    rr.odds ?? 0,
+                    `W${race.week} · Rung ${race.rung}`,
+                    race.id,
+                  )
+                }
+              }}
               style={{
                 padding: '7px 5px',
                 borderRadius: '5px',
                 border: `0.5px solid ${
-                  isSelected ? 'var(--red2)'
+                  inSlip ? 'var(--red2)'
                   : alreadyBet ? 'var(--green)'
                   : 'var(--borderb)'
                 }`,
-                background: isSelected ? 'var(--red-bg)'
+                background: inSlip ? 'var(--red-bg)'
                   : alreadyBet ? 'var(--green-bg)'
                   : 'var(--navy2)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled && !alreadyBet ? 0.5 : 1,
+                opacity: disabled && !alreadyBet ? 0.5
+                  : anotherPickInThisRace && !inSlip ? 0.4
+                  : 1,
                 transition: 'all .15s',
               }}
             >
@@ -224,7 +213,7 @@ export default function RaceCard({
                 fontSize: '9px', color: 'var(--dim)',
                 letterSpacing: '.5px', fontWeight: 700,
               }}>
-                {alreadyBet ? 'YOUR BET' : 'WINS'}
+                {alreadyBet ? 'YOUR BET' : inSlip ? 'IN SLIP ✓' : 'WINS'}
               </div>
               <div style={{
                 fontSize: '11px', fontWeight: 700,
@@ -247,87 +236,6 @@ export default function RaceCard({
           )
         })}
       </div>
-
-      {/* Wager input */}
-      {selectedRR && !existingBet && (
-        <div style={{
-          padding: '10px 12px',
-          borderTop: '0.5px solid var(--border)',
-          background: 'var(--navy2)',
-        }}>
-          <div style={{
-            display: 'flex', gap: '8px',
-            alignItems: 'center', marginBottom: '8px',
-          }}>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: '10px', color: 'var(--muted)',
-                marginBottom: '4px',
-                textTransform: 'uppercase', letterSpacing: '.3px',
-              }}>
-                Wager (Studs)
-              </div>
-              <input
-                type="number"
-                value={wager}
-                min={10}
-                step={10}
-                onChange={e => setWager(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  background: 'var(--navy3)',
-                  border: '0.5px solid var(--borderb)',
-                  borderRadius: '5px',
-                  padding: '7px 10px',
-                  color: 'var(--white)',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              />
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{
-                fontSize: '10px', color: 'var(--muted)',
-                marginBottom: '4px',
-              }}>
-                Est. payout
-              </div>
-              <div style={{
-                fontSize: '16px', fontWeight: 700,
-                color: 'var(--gold)',
-                fontFamily: "'Barlow Condensed', sans-serif",
-              }}>
-                {potentialPayout.toLocaleString()}
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div style={{
-              fontSize: '11px', color: 'var(--red2)',
-              marginBottom: '6px',
-            }}>
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={placeBet}
-            disabled={placing || wager < 10}
-            style={{
-              width: '100%', padding: '10px',
-              background: placing ? 'var(--navy4)' : 'var(--red2)',
-              color: '#fff', border: 'none', borderRadius: '6px',
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: '16px', fontWeight: 800,
-              letterSpacing: '1px', textTransform: 'uppercase',
-              cursor: placing ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {placing ? 'Placing...' : 'Place Bet'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

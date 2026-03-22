@@ -17,28 +17,19 @@ interface FuturesMarket {
   }
 }
 
-interface UserFuturesBet {
-  runner_id: string
-  market: string
-  status: string
-  wager: number
-  potential_payout: number
+interface FuturesFeedProps {
+  slipPicks: string[]
+  onAddToSlip: (id: string, runner: string, odds: number, sublabel: string) => void
+  onRemoveFromSlip: (id: string) => void
 }
 
-export default function FuturesFeed() {
+export default function FuturesFeed({ slipPicks, onAddToSlip, onRemoveFromSlip }: FuturesFeedProps) {
   const [markets, setMarkets] = useState<FuturesMarket[]>([])
-  const [userBets, setUserBets] = useState<UserFuturesBet[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [wager, setWager] = useState(200)
-  const [placing, setPlacing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
     fetchMarkets()
-    fetchUserBets()
   }, [])
 
   async function fetchMarkets() {
@@ -55,200 +46,92 @@ export default function FuturesFeed() {
     setLoading(false)
   }
 
-  async function fetchUserBets() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data } = await supabase
-      .from('futures_bets')
-      .select('runner_id, market, status, wager, potential_payout')
-      .eq('user_id', user.id)
-    setUserBets((data as unknown as UserFuturesBet[]) ?? [])
-  }
-
-  async function placeBet() {
-    if (!selectedKey) return
-    const [market, runner_id] = selectedKey.split('::')
-    const entry = markets.find(m => m.market === market && m.runner_id === runner_id)
-    if (!entry || !entry.odds) return
-
-    setPlacing(true)
-    setError(null)
-
-    const res = await fetch('/api/futures-bets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ market, runner_id, wager }),
-    })
-    const data = await res.json()
-
-    if (!res.ok) {
-      setError(data.error)
-    } else {
-      setSuccess(`Bet placed on ${entry.runner.username}!`)
-      setSelectedKey(null)
-      fetchUserBets()
-      setTimeout(() => setSuccess(null), 3000)
-    }
-    setPlacing(false)
-  }
-
   const champion = markets.filter(m => m.market === 'champion')
   const qualification = markets.filter(m => m.market === 'top8_qualification')
 
   function MarketRow({ entry }: { entry: FuturesMarket }) {
     const key = `${entry.market}::${entry.runner_id}`
-    const isSelected = selectedKey === key
-    const userBet = userBets.find(b => b.runner_id === entry.runner_id && b.market === entry.market)
-    const potentialPayout = entry.odds ? Math.floor(wager * entry.odds) : 0
+    const inSlip = slipPicks.includes(key)
 
     return (
-      <>
-        <div
-          onClick={() => {
-            if (userBet) return
-            setSelectedKey(isSelected ? null : key)
-            setError(null)
-          }}
-          style={{
-            display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '7px 0',
-            borderBottom: '0.5px solid var(--border)',
-            cursor: userBet ? 'default' : 'pointer',
-            transition: 'background .12s',
-          }}
-          onMouseEnter={e => {
-            if (!userBet) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)'
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {entry.runner.seed && (
-              <span style={{
-                fontSize: '11px', fontWeight: 700,
-                color: 'var(--dim)', width: '22px',
-              }}>
-                #{entry.runner.seed}
-              </span>
-            )}
-            <div>
-              <div style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: '14px', fontWeight: 700,
-                color: isSelected ? 'var(--red2)' : 'var(--white)',
-                letterSpacing: '.3px',
-                transition: 'color .12s',
-              }}>
-                {entry.runner.username}
-                {userBet && (
-                  <span style={{
-                    fontSize: '9px', fontWeight: 800,
-                    padding: '1px 5px', borderRadius: '3px',
-                    background: 'var(--green-bg)', color: 'var(--green)',
-                    border: '1px solid var(--green-border)',
-                    marginLeft: '6px',
-                  }}>YOUR BET</span>
-                )}
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
-                {entry.runner.character} · PB {entry.runner.pb?.toString().slice(0, 7)}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div
+        onClick={() => {
+          if (!entry.odds) return
+          if (inSlip) {
+            onRemoveFromSlip(key)
+          } else {
+            onAddToSlip(
+              key,
+              entry.runner.username,
+              entry.odds,
+              entry.market === 'champion' ? 'Season Champion' : 'Top 8 Qualification',
+            )
+          }
+        }}
+        style={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '7px 0',
+          borderBottom: '0.5px solid var(--border)',
+          cursor: entry.odds ? 'pointer' : 'default',
+          transition: 'background .12s',
+        }}
+        onMouseEnter={e => {
+          if (entry.odds) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {entry.runner.seed && (
             <span style={{
+              fontSize: '11px', fontWeight: 700,
+              color: 'var(--dim)', width: '22px',
+            }}>
+              #{entry.runner.seed}
+            </span>
+          )}
+          <div>
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
               fontSize: '14px', fontWeight: 700,
-              color: 'var(--gold)',
+              color: inSlip ? 'var(--red2)' : 'var(--white)',
+              letterSpacing: '.3px',
+              transition: 'color .12s',
+              display: 'flex', alignItems: 'center', gap: '5px',
             }}>
-              {entry.odds ? `${entry.odds}x` : 'TBD'}
-            </span>
-            <span style={{
-              fontSize: '13px',
-              color: isSelected ? 'var(--red2)' : 'var(--dim)',
-            }}>
-              {isSelected ? '✓' : '+'}
-            </span>
+              {entry.runner.username}
+              {inSlip && (
+                <span style={{
+                  fontSize: '9px', fontWeight: 800,
+                  padding: '1px 5px', borderRadius: '3px',
+                  background: 'var(--red-bg)', color: 'var(--red2)',
+                  border: '1px solid var(--red-border)',
+                }}>IN SLIP ✓</span>
+              )}
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
+              {entry.runner.character} · PB {entry.runner.pb?.toString().slice(0, 8)}
+            </div>
           </div>
         </div>
 
-        {/* Inline wager input when selected */}
-        {isSelected && !userBet && (
-          <div style={{
-            padding: '10px 0',
-            borderBottom: '0.5px solid var(--border)',
-            background: 'rgba(231,76,60,0.04)',
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '14px', fontWeight: 700,
+            color: 'var(--gold)',
           }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '.3px' }}>
-                  Wager (Studs)
-                </div>
-                <input
-                  type="number"
-                  value={wager}
-                  min={10}
-                  step={10}
-                  onChange={e => setWager(Number(e.target.value))}
-                  style={{
-                    width: '100%',
-                    background: 'var(--navy3)',
-                    border: '0.5px solid var(--borderb)',
-                    borderRadius: '5px',
-                    padding: '7px 10px',
-                    color: 'var(--white)',
-                    fontSize: '14px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '4px' }}>Est. payout</div>
-                <div style={{
-                  fontSize: '16px', fontWeight: 700,
-                  color: 'var(--gold)',
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                }}>
-                  {potentialPayout.toLocaleString()}
-                </div>
-              </div>
-            </div>
-            {error && (
-              <div style={{ fontSize: '11px', color: 'var(--red2)', marginBottom: '6px' }}>{error}</div>
-            )}
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                onClick={placeBet}
-                disabled={placing || wager < 10}
-                style={{
-                  flex: 1, padding: '9px',
-                  background: placing ? 'var(--navy4)' : 'var(--red2)',
-                  color: '#fff', border: 'none', borderRadius: '5px',
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontSize: '15px', fontWeight: 800,
-                  letterSpacing: '1px', textTransform: 'uppercase',
-                  cursor: placing ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {placing ? 'Placing...' : 'Place Bet'}
-              </button>
-              <button
-                onClick={() => setSelectedKey(null)}
-                style={{
-                  padding: '9px 14px',
-                  background: 'transparent', color: 'var(--muted)',
-                  border: '0.5px solid var(--border)', borderRadius: '5px',
-                  fontSize: '13px', cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </>
+            {entry.odds ? `${entry.odds}x` : 'TBD'}
+          </span>
+          <span style={{
+            fontSize: '13px',
+            color: inSlip ? 'var(--red2)' : 'var(--dim)',
+          }}>
+            {inSlip ? '✓' : '+'}
+          </span>
+        </div>
+      </div>
     )
   }
 
@@ -258,18 +141,6 @@ export default function FuturesFeed() {
 
   return (
     <div>
-      {success && (
-        <div style={{
-          background: 'var(--green-bg)', border: '1px solid var(--green-border)',
-          color: 'var(--green)', borderRadius: '7px',
-          padding: '10px 14px', marginBottom: '12px',
-          fontSize: '13px', fontWeight: 600,
-        }}>
-          ✓ {success}
-        </div>
-      )}
-
-      {/* Champion market */}
       {champion.length > 0 && (
         <div style={{
           background: 'var(--navy2)',
@@ -295,7 +166,6 @@ export default function FuturesFeed() {
         </div>
       )}
 
-      {/* Top 8 qualification market */}
       {qualification.length > 0 && (
         <div style={{
           background: 'var(--navy2)',

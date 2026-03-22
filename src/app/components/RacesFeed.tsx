@@ -7,9 +7,17 @@ import type { RaceWithRunners } from '@/types'
 
 interface RacesFeedProps {
   hideFormatBox?: boolean
+  slipPicks: string[]
+  onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
+  onRemoveFromSlip: (id: string) => void
 }
 
-export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
+export default function RacesFeed({
+  hideFormatBox = false,
+  slipPicks,
+  onAddToSlip,
+  onRemoveFromSlip,
+}: RacesFeedProps) {
   const [races, setRaces] = useState<RaceWithRunners[]>([])
   const [loading, setLoading] = useState(true)
   const [userBets, setUserBets] = useState<Record<string, string>>({})
@@ -143,6 +151,9 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
                 userBets={userBets}
                 onBetPlaced={handleBetPlaced}
                 isEliminationRung={race.rung === maxRung}
+                slipPicks={slipPicks}
+                onAddToSlip={onAddToSlip}
+                onRemoveFromSlip={onRemoveFromSlip}
               />
             ))}
           </div>
