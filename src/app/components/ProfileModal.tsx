@@ -237,16 +237,22 @@ export default function ProfileModal({
                                     fontSize: '9px',
                                     color: leg.status === 'won' ? 'var(--green)'
                                       : leg.status === 'lost' ? 'var(--red2)'
+                                      : parlay.status === 'lost' ? 'var(--dim)'
                                       : 'var(--dim)',
                                   }}>
-                                    {leg.status === 'won' ? '✓' : leg.status === 'lost' ? '✕' : '•'}
+                                    {leg.status === 'won' ? '✓'
+                                      : leg.status === 'lost' ? '✕'
+                                      : parlay.status === 'lost' ? '—'
+                                      : '•'}
                                   </span>
                                   <span style={{
                                     color: leg.status === 'won' ? 'var(--green)'
                                       : leg.status === 'lost' ? 'var(--red2)'
+                                      : parlay.status === 'lost' ? 'var(--dim)'
                                       : 'var(--white)',
+                                    textDecoration: parlay.status === 'lost' && leg.status === 'pending' ? 'line-through' : 'none',
                                   }}>
-                                    {leg.runner_username ?? `Leg ${i + 1}`} wins
+                                    {leg.runner_username ? `${leg.runner_username} wins` : `Leg ${i + 1} wins`}
                                   </span>
                                   {leg.race_week && (
                                     <span style={{ color: 'var(--dim)', fontSize: '10px' }}>

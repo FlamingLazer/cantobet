@@ -182,32 +182,40 @@ export default function MyBets() {
   function ParlayRow({ parlay }: { parlay: ParlayBet }) {
   const [open, setOpen] = useState(true)
 
-  const legStatusIcon = (status: string) => {
-    if (status === 'won') return (
-      <div style={{
-        width: '18px', height: '18px', borderRadius: '50%',
-        background: 'var(--green-bg)', border: '1px solid var(--green-border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: '10px', color: 'var(--green)',
-      }}>✓</div>
-    )
-    if (status === 'lost') return (
-      <div style={{
-        width: '18px', height: '18px', borderRadius: '50%',
-        background: 'var(--red-bg)', border: '1px solid var(--red-border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: '10px', color: 'var(--red2)',
-      }}>✕</div>
-    )
-    return (
-      <div style={{
-        width: '18px', height: '18px', borderRadius: '50%',
-        background: 'var(--navy3)', border: '1px solid var(--borderb)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, fontSize: '8px', color: 'var(--dim)',
-      }}>•</div>
-    )
-  }
+  const legStatusIcon = (status: string, parlayStatus: string) => {
+  if (status === 'won') return (
+    <div style={{
+      width: '18px', height: '18px', borderRadius: '50%',
+      background: 'var(--green-bg)', border: '1px solid var(--green-border)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, fontSize: '10px', color: 'var(--green)',
+    }}>✓</div>
+  )
+  if (status === 'lost') return (
+    <div style={{
+      width: '18px', height: '18px', borderRadius: '50%',
+      background: 'var(--red-bg)', border: '1px solid var(--red-border)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, fontSize: '10px', color: 'var(--red2)',
+    }}>✕</div>
+  )
+  if (parlayStatus === 'lost') return (
+    <div style={{
+      width: '18px', height: '18px', borderRadius: '50%',
+      background: 'var(--navy3)', border: '1px solid var(--border)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, fontSize: '10px', color: 'var(--dim)',
+    }}>—</div>
+  )
+  return (
+    <div style={{
+      width: '18px', height: '18px', borderRadius: '50%',
+      background: 'var(--navy3)', border: '1px solid var(--borderb)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, fontSize: '8px', color: 'var(--dim)',
+    }}>•</div>
+  )
+}
 
   const wonLegs = parlay.legs.filter((l: any) => l.status === 'won').length
   const lostLegs = parlay.legs.filter((l: any) => l.status === 'lost').length
@@ -321,14 +329,16 @@ export default function MyBets() {
               padding: '6px 0',
               borderBottom: i < parlay.legs.length - 1 ? '0.5px solid var(--border)' : 'none',
             }}>
-              {legStatusIcon(leg.status ?? 'pending')}
+              {legStatusIcon(leg.status ?? 'pending', parlay.status)}
               <div style={{ flex: 1 }}>
                 <div style={{
                   fontFamily: "'Barlow Condensed', sans-serif",
                   fontSize: '13px', fontWeight: 700,
                   color: leg.status === 'won' ? 'var(--green)'
                     : leg.status === 'lost' ? 'var(--red2)'
-                    : 'var(--white)',
+                    : 'var(--muted)',
+                  textDecoration: (!leg.status || leg.status === 'pending') && parlay.status === 'lost'
+                    ? 'line-through' : 'none',
                 }}>
                   {leg.runner_username ?? `Leg ${i + 1}`} wins
                 </div>
