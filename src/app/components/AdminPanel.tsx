@@ -55,6 +55,9 @@ export default function AdminPanel() {
   const [settling, setSettling] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
+  const [editRaceId, setEditRaceId] = useState<string | null>(null)
+  const [editTime, setEditTime] = useState('')
+  const [editOdds, setEditOdds] = useState<Record<string, string>>({})
 
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
@@ -80,6 +83,35 @@ export default function AdminPanel() {
     fetchUsers()
     fetchAudit()
   }, [])
+
+  async function saveRaceEdit() {
+    if (!editRaceId) return
+
+    // Update scheduled time
+    if (editTime) {
+      await supabase
+        .from('races')
+        .update({ scheduled_at: new Date(editTime).toISOString() })
+        .eq('id', editRaceId)
+    }
+
+    // Update odds for each runner
+    for (const [rrId, odds] of Object.entries(editOdds)) {
+      const parsed = parseFloat(odds)
+      if (!isNaN(parsed)) {
+        await supabase
+          .from('race_runners')
+          .update({ odds: parsed })
+          .eq('id', rrId)
+      }
+    }
+
+    showToast('Race updated!')
+    setEditRaceId(null)
+    setEditTime('')
+    setEditOdds({})
+    fetchRaces()
+  }
 
   async function fetchRunners() {
     const { data } = await supabase
@@ -434,7 +466,7 @@ export default function AdminPanel() {
               background: 'var(--navy3)', border: '0.5px solid var(--border)',
               borderRadius: '6px', padding: '10px 12px', marginBottom: '8px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: settleRaceId === race.id ? '10px' : '0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (settleRaceId === race.id || editRaceId === race.id) ? '10px' : '0' }}>
                 <div>
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: 800 }}>
                     W{race.week} · Rung {race.rung}
@@ -453,6 +485,8 @@ export default function AdminPanel() {
                   }}>
                     {race.status.toUpperCase()}
                   </span>
+
+                  {/* Settle button */}
                   {settleRaceId === race.id ? (
                     <button
                       onClick={() => setSettleRaceId(null)}
@@ -462,12 +496,42 @@ export default function AdminPanel() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => setSettleRaceId(race.id)}
+                      onClick={() => { setSettleRaceId(race.id); setEditRaceId(null) }}
                       style={{ padding: '5px 10px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
                     >
                       Settle
                     </button>
                   )}
+
+                  {/* Edit button */}
+                  {editRaceId === race.id ? (
+                    <button
+                      onClick={() => { setEditRaceId(null); setEditTime(''); setEditOdds({}) }}
+                      style={{ padding: '5px 10px', background: 'transparent', color: 'var(--muted)', border: '0.5px solid var(--border)', borderRadius: '5px', fontSize: '12px', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditRaceId(race.id)
+                        setSettleRaceId(null)
+                        const scheduledDate = new Date(race.scheduled_at)
+                        scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset())
+                        setEditTime(scheduledDate.toISOString().slice(0, 16))
+                        const initialOdds: Record<string, string> = {}
+                        race.race_runners.forEach(rr => {
+                          initialOdds[rr.id] = rr.odds?.toString() ?? ''
+                        })
+                        setEditOdds(initialOdds)
+                      }}
+                      style={{ padding: '5px 10px', background: 'var(--blue-bg)', color: 'var(--blue)', border: '0.5px solid var(--blue-border)', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Edit
+                    </button>
+                  )}
+
+                  {/* Delete button */}
                   <button
                     onClick={() => deleteRace(race.id)}
                     style={{ padding: '5px 10px', background: 'var(--red-bg)', color: 'var(--red2)', border: '0.5px solid var(--red-border)', borderRadius: '5px', fontSize: '12px', cursor: 'pointer' }}
@@ -477,6 +541,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Settle form */}
               {settleRaceId === race.id && (
                 <div>
                   {race.race_runners.map(rr => (
@@ -516,6 +581,52 @@ export default function AdminPanel() {
                     }}
                   >
                     {settling ? 'Settling...' : 'Confirm & Pay Out'}
+                  </button>
+                </div>
+              )}
+
+              {/* Edit form */}
+              {editRaceId === race.id && (
+                <div style={{ paddingTop: '10px', borderTop: '0.5px solid var(--border)' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Scheduled time</div>
+                    <input
+                      type="datetime-local"
+                      value={editTime}
+                      onChange={e => setEditTime(e.target.value)}
+                      style={{ width: '100%', background: 'var(--navy2)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '6px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px', fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>
+                    Odds
+                  </div>
+                  {race.race_runners.map(rr => (
+                    <div key={rr.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                        {rr.runner?.username}
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="e.g. 1.80"
+                        value={editOdds[rr.id] ?? ''}
+                        step={0.05} min={1}
+                        onChange={e => setEditOdds(prev => ({ ...prev, [rr.id]: e.target.value }))}
+                        style={{ background: 'var(--navy2)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '6px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    onClick={saveRaceEdit}
+                    style={{
+                      width: '100%', padding: '8px',
+                      background: 'var(--blue)', color: '#fff',
+                      border: 'none', borderRadius: '5px',
+                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: '14px', fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Save Changes
                   </button>
                 </div>
               )}
