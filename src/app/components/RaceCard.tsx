@@ -170,7 +170,7 @@ export default function RaceCard({
           const anotherPickInThisRace = slipPicks.some(id =>
             race.race_runners.some(r => r.id === id && r.id !== rr.id)
           )
-          const disabled = isLocked || isPast || !!existingBet
+          const disabled = isLocked || isPast
 
           return (
             <button
@@ -193,17 +193,17 @@ export default function RaceCard({
                 padding: '7px 5px',
                 borderRadius: '5px',
                 border: `0.5px solid ${
-                  inSlip ? 'var(--red2)'
-                  : alreadyBet ? 'var(--green)'
+                  alreadyBet ? 'var(--green)'
+                  : inSlip ? 'var(--red2)'
                   : 'var(--borderb)'
                 }`,
-                background: inSlip ? 'var(--red-bg)'
-                  : alreadyBet ? 'var(--green-bg)'
+                background: alreadyBet ? 'var(--green-bg)'
+                  : inSlip ? 'var(--red-bg)'
                   : 'var(--navy2)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled && !alreadyBet ? 0.5
+                opacity: disabled ? 0.5
                   : anotherPickInThisRace && !inSlip ? 0.4
                   : 1,
                 transition: 'all .15s',
