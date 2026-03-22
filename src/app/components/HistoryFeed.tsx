@@ -187,16 +187,19 @@ function RaceDoneCard({
             const badgeBg = isQualifying ? '#1a1208'
               : isEliminated ? 'var(--red-bg)'
               : isStaying ? 'var(--navy4)'
+              : i === 2 ? 'var(--red-bg)'
               : 'var(--green-bg)'
 
             const badgeColor = isQualifying ? 'var(--gold)'
               : isEliminated ? 'var(--red2)'
               : isStaying ? 'var(--muted)'
+              : i === 2 ? 'var(--red2)'
               : 'var(--green)'
 
             const badgeBorder = isQualifying ? 'var(--gold-dim)'
               : isEliminated ? 'var(--red-border)'
               : isStaying ? 'var(--border)'
+              : i === 2 ? 'var(--red-border)'
               : 'var(--green-border)'
 
             return (
