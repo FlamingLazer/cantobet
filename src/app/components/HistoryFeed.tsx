@@ -309,21 +309,23 @@ export default function HistoryFeed() {
   }, [])
 
   async function fetchHistory() {
-    const { data } = await supabase
-  .from('races')
-  .select(`
-    id, week, rung, scheduled_at, winner_runner_id,
-    race_runners (
-      id, finish_position, finish_time, leapfrog, leapfrogged,
-      runner:runners(username, character, country_code)
-    )
-  `)
-  .eq('status', 'settled')
-  .order('scheduled_at', { ascending: false })
+  const { data } = await supabase
+    .from('races')
+    .select(`
+      id, week, rung, scheduled_at, winner_runner_id,
+      race_runners (
+        id, finish_position, finish_time, leapfrog, leapfrogged,
+        runner:runners(username, character, country_code)
+      )
+    `)
+    .eq('status', 'settled')
+    .order('week', { ascending: false })
+    .order('rung', { ascending: true })
 
-    setRaces((data as unknown as RaceResult[]) ?? [])
-    setLoading(false)
-  }
+  const raceData = (data as unknown as RaceResult[]) ?? []
+  setRaces(raceData)
+  setLoading(false)
+}
 
   async function fetchUserBets() {
     const { data: { user } } = await supabase.auth.getUser()
