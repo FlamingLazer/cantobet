@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import ProfileModal from './ProfileModal'
 
 interface Runner {
   id: string
@@ -53,6 +54,7 @@ export default function AdminPanel() {
   const [settleResults, setSettleResults] = useState<Record<string, { time: string; position: number }>>({})
   const [settling, setSettling] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
 
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
@@ -234,20 +236,20 @@ export default function AdminPanel() {
   }
 
   async function toggleAdmin(userId: string, current: boolean) {
-  const res = await fetch('/api/admin/toggle-admin', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, is_admin: !current }),
-  })
-  if (res.ok) {
-    fetchUsers()
-    fetchAudit()
-    showToast(`Admin access ${!current ? 'granted' : 'removed'}`)
-  } else {
-    const data = await res.json()
-    showToast(`Error: ${data.error}`)
+    const res = await fetch('/api/admin/toggle-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, is_admin: !current }),
+    })
+    if (res.ok) {
+      fetchUsers()
+      fetchAudit()
+      showToast(`Admin access ${!current ? 'granted' : 'removed'}`)
+    } else {
+      const data = await res.json()
+      showToast(`Error: ${data.error}`)
+    }
   }
-}
 
   async function applyStudsAdjustment() {
     const user = users.find(u => u.twitch_username.toLowerCase() === adjUsername.toLowerCase())
@@ -325,7 +327,7 @@ export default function AdminPanel() {
         {sectionBtn('audit', 'Audit Log')}
       </div>
 
-      {/* ── CREATE RACE ── */}
+      {/* CREATE RACE */}
       {activeSection === 'races' && (
         <div style={{
           background: 'var(--navy2)', border: '0.5px solid var(--border)',
@@ -410,7 +412,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ── SETTLE RACES ── */}
+      {/* SETTLE RACES */}
       {activeSection === 'settle' && (
         <div style={{
           background: 'var(--navy2)', border: '0.5px solid var(--border)',
@@ -520,7 +522,6 @@ export default function AdminPanel() {
             </div>
           ))}
 
-          {/* Recently Settled */}
           {settledRaces.length > 0 && (
             <div style={{ marginTop: '14px' }}>
               <div style={{
@@ -543,10 +544,7 @@ export default function AdminPanel() {
                   opacity: 0.8,
                 }}>
                   <div>
-                    <div style={{
-                      fontFamily: "'Barlow Condensed', sans-serif",
-                      fontSize: '14px', fontWeight: 800,
-                    }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: 800 }}>
                       W{race.week} · Rung {race.rung}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
@@ -574,12 +572,12 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ── FUTURES ODDS ── */}
+      {/* FUTURES ODDS */}
       {activeSection === 'futures' && (
         <FuturesOddsPanel onToast={showToast} onRefresh={fetchAudit} />
       )}
 
-      {/* ── USERS ── */}
+      {/* USERS */}
       {activeSection === 'users' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{
@@ -608,7 +606,17 @@ export default function AdminPanel() {
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
                 fontSize: '12px',
               }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                <span
+                  onClick={() => setViewingUser({ id: u.id, username: u.twitch_username })}
+                  style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '13px', fontWeight: 700,
+                    cursor: 'pointer', color: 'var(--white)',
+                    textDecoration: 'underline',
+                    textDecorationColor: 'var(--border)',
+                    textUnderlineOffset: '3px',
+                  }}
+                >
                   {u.twitch_username}
                 </span>
                 <span style={{ textAlign: 'right', color: 'var(--gold)', fontWeight: 600 }}>
@@ -693,7 +701,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ── AUDIT LOG ── */}
+      {/* AUDIT LOG */}
       {activeSection === 'audit' && (
         <div style={{
           background: 'var(--navy2)', border: '0.5px solid var(--border)',
@@ -768,10 +776,7 @@ export default function AdminPanel() {
                     hour: 'numeric', minute: '2-digit',
                   })}
                 </span>
-                <span style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontSize: '13px', fontWeight: 700,
-                }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
                   {entry.admin?.twitch_username ?? '—'}
                 </span>
                 <span style={{ color: 'var(--muted)', lineHeight: 1.4 }}>
@@ -791,6 +796,16 @@ export default function AdminPanel() {
             )
           })}
         </div>
+      )}
+
+      {viewingUser && (
+        <ProfileModal
+          userId={viewingUser.id}
+          username={viewingUser.username}
+          isAdmin={true}
+          onClose={() => setViewingUser(null)}
+          onSignOut={() => {}}
+        />
       )}
 
       {toast && (
