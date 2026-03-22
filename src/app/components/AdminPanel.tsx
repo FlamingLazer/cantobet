@@ -87,30 +87,25 @@ export default function AdminPanel() {
   async function saveRaceEdit() {
     if (!editRaceId) return
 
-    // Update scheduled time
-    if (editTime) {
-      await supabase
-        .from('races')
-        .update({ scheduled_at: new Date(editTime).toISOString() })
-        .eq('id', editRaceId)
-    }
+    const res = await fetch(`/api/races/${editRaceId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scheduled_at: editTime ? new Date(editTime).toISOString() : undefined,
+        odds: editOdds,
+      }),
+    })
 
-    // Update odds for each runner
-    for (const [rrId, odds] of Object.entries(editOdds)) {
-      const parsed = parseFloat(odds)
-      if (!isNaN(parsed)) {
-        await supabase
-          .from('race_runners')
-          .update({ odds: parsed })
-          .eq('id', rrId)
-      }
+    if (res.ok) {
+      showToast('Race updated!')
+      setEditRaceId(null)
+      setEditTime('')
+      setEditOdds({})
+      fetchRaces()
+    } else {
+      const data = await res.json()
+      showToast(`Error: ${data.error}`)
     }
-
-    showToast('Race updated!')
-    setEditRaceId(null)
-    setEditTime('')
-    setEditOdds({})
-    fetchRaces()
   }
 
   async function fetchRunners() {

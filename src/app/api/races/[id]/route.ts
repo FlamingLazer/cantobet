@@ -87,3 +87,56 @@ export async function DELETE(
 
   return NextResponse.json({ success: true })
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const service = createServiceClient()
+
+  const { data: profile } = await service
+    .from('users')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const body = await req.json()
+  const { scheduled_at, odds } = body
+
+  if (scheduled_at) {
+    await service
+      .from('races')
+      .update({ scheduled_at })
+      .eq('id', id)
+  }
+
+  if (odds) {
+    for (const [rrId, val] of Object.entries(odds)) {
+      const parsed = parseFloat(val as string)
+      if (!isNaN(parsed)) {
+        await service
+          .from('race_runners')
+          .update({ odds: parsed })
+          .eq('id', rrId)
+      }
+    }
+  }
+
+  await writeAuditLog({
+    admin_user_id: user.id,
+    action_type: 'odds_updated',
+    description: `Updated race W— odds/time for race ${id}`,
+    metadata: { race_id: id, scheduled_at, odds },
+  })
+
+  return NextResponse.json({ success: true })
+}
