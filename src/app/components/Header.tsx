@@ -114,7 +114,7 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
           letterSpacing: '3px',
           color: 'var(--white)',
         }}>
-          LADDER<span style={{ color: 'var(--red2)' }}>BOOK</span>
+          CANTO<span style={{ color: 'var(--red2)' }}>BET</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
