@@ -28,6 +28,7 @@ interface UserBetResult {
   status: 'pending' | 'won' | 'lost'
   wager: number
   potential_payout: number
+  points_earned: number | null
   race_runner: { race_id: string } | null
 }
 
@@ -83,7 +84,7 @@ function RaceDoneCard({
       borderRadius: '8px',
       marginBottom: '6px',
       overflow: 'hidden',
-      opacity: 0.85,
+      opacity: 0.9,
     }}>
       <div
         onClick={() => setOpen(!open)}
@@ -160,6 +161,19 @@ function RaceDoneCard({
           }}>DONE</span>
         )}
 
+        {userBet && (
+          <span style={{
+            fontSize: '9px', fontWeight: 700,
+            padding: '1px 6px', borderRadius: '3px',
+            background: userBet.status === 'won' ? 'var(--green-bg)' : userBet.status === 'lost' ? 'var(--red-bg)' : 'var(--navy4)',
+            color: userBet.status === 'won' ? 'var(--green)' : userBet.status === 'lost' ? 'var(--red2)' : 'var(--muted)',
+            border: `1px solid ${userBet.status === 'won' ? 'var(--green-border)' : userBet.status === 'lost' ? 'var(--red-border)' : 'var(--border)'}`,
+            flexShrink: 0,
+          }}>
+            {userBet.status === 'won' ? `+${(userBet.points_earned ?? 0).toFixed(1)}pts` : userBet.status === 'lost' ? '✕' : '•'}
+          </span>
+        )}
+
         <span style={{
           fontSize: '10px', color: 'var(--dim)',
           transition: 'transform .2s',
@@ -171,9 +185,7 @@ function RaceDoneCard({
       {open && (
         <div style={{ borderTop: '0.5px solid var(--border)', padding: '8px 12px' }}>
           {sorted.map((rr, i) => {
-            const posColor = i === 0
-              ? 'var(--gold)'
-              : i === 1 ? 'var(--blue)' : 'var(--red2)'
+            const posColor = i === 0 ? 'var(--gold)' : i === 1 ? 'var(--blue)' : 'var(--red2)'
 
             const isStaying = i === 1 && rung1Note
             const isEliminated = (i === 2 && isElimRung) || (i === 1 && isElimRung)
@@ -262,18 +274,18 @@ function RaceDoneCard({
               fontSize: '11px',
             }}>
               <span style={{ color: 'var(--muted)' }}>
-                Your bet: <strong style={{ color: 'var(--white)' }}>
+                Your prediction: <strong style={{ color: 'var(--white)' }}>
                   {race.race_runners.find(r => r.id === userBet.race_runner_id)?.runner?.username} wins
                 </strong>
               </span>
               {userBet.status === 'won' && (
                 <span style={{ color: 'var(--green)', fontWeight: 700 }}>
-                  Won · +{(userBet.potential_payout - userBet.wager).toLocaleString()} Studs
+                  Correct · +{(userBet.points_earned ?? 0).toFixed(1)}pts
                 </span>
               )}
               {userBet.status === 'lost' && (
                 <span style={{ color: 'var(--red2)', fontWeight: 700 }}>
-                  Lost · −{userBet.wager.toLocaleString()} Studs
+                  Incorrect
                 </span>
               )}
               {userBet.status === 'pending' && (
@@ -287,7 +299,7 @@ function RaceDoneCard({
               borderTop: '0.5px solid var(--border)',
               fontSize: '11px', color: 'var(--dim)',
             }}>
-              No bet placed
+              No prediction made
             </div>
           )}
         </div>
@@ -300,7 +312,7 @@ export default function HistoryFeed() {
   const [races, setRaces] = useState<RaceResult[]>([])
   const [userBets, setUserBets] = useState<UserBetResult[]>([])
   const [loading, setLoading] = useState(true)
-  const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({})
+  const [currentWeek, setCurrentWeek] = useState<number | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -309,23 +321,28 @@ export default function HistoryFeed() {
   }, [])
 
   async function fetchHistory() {
-  const { data } = await supabase
-    .from('races')
-    .select(`
-      id, week, rung, scheduled_at, winner_runner_id,
-      race_runners (
-        id, finish_position, finish_time, leapfrog, leapfrogged,
-        runner:runners(username, character, country_code)
-      )
-    `)
-    .eq('status', 'settled')
-    .order('week', { ascending: false })
-    .order('rung', { ascending: true })
+    const { data } = await supabase
+      .from('races')
+      .select(`
+        id, week, rung, scheduled_at, winner_runner_id,
+        race_runners (
+          id, finish_position, finish_time, leapfrog, leapfrogged,
+          runner:runners(username, character, country_code)
+        )
+      `)
+      .eq('status', 'settled')
+      .order('week', { ascending: false })
+      .order('rung', { ascending: true })
 
-  const raceData = (data as unknown as RaceResult[]) ?? []
-  setRaces(raceData)
-  setLoading(false)
-}
+    const raceData = (data as unknown as RaceResult[]) ?? []
+    setRaces(raceData)
+
+    if (raceData.length > 0) {
+      setCurrentWeek(raceData[0].week)
+    }
+
+    setLoading(false)
+  }
 
   async function fetchUserBets() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -333,23 +350,16 @@ export default function HistoryFeed() {
 
     const { data } = await supabase
       .from('bets')
-      .select('race_runner_id, status, wager, potential_payout, race_runner:race_runners(race_id)')
+      .select('race_runner_id, status, wager, potential_payout, points_earned, race_runner:race_runners(race_id)')
       .eq('user_id', user.id)
 
     setUserBets((data as unknown as UserBetResult[]) ?? [])
   }
 
-  const byWeek = races.reduce((acc, race) => {
-    if (!acc[race.week]) acc[race.week] = []
-    acc[race.week].push(race)
-    return acc
-  }, {} as Record<number, RaceResult[]>)
-
-  const weeks = Object.keys(byWeek).map(Number).sort((a, b) => b - a)
-
-  function toggleWeek(week: number) {
-    setExpandedWeeks(prev => ({ ...prev, [week]: !prev[week] }))
-  }
+  const weeks = [...new Set(races.map(r => r.week))].sort((a, b) => a - b)
+  const minWeek = weeks[0] ?? 1
+  const maxWeek = weeks[weeks.length - 1] ?? 1
+  const weekRaces = races.filter(r => r.week === currentWeek)
 
   if (loading) {
     return (
@@ -370,63 +380,92 @@ export default function HistoryFeed() {
 
   return (
     <div>
-      {weeks.map(week => {
-        const weekRaces = byWeek[week]
-        const isExpanded = expandedWeeks[week] !== false
-        const visible = isExpanded ? weekRaces : weekRaces.slice(0, 4)
-        const hasMore = weekRaces.length > 4
+      {/* Week navigator */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: '14px',
+        background: 'var(--navy2)',
+        border: '0.5px solid var(--border)',
+        borderRadius: '8px',
+        padding: '10px 14px',
+      }}>
+        <button
+          onClick={() => setCurrentWeek(w => Math.max(minWeek, (w ?? minWeek) - 1))}
+          disabled={currentWeek === minWeek}
+          style={{
+            background: 'none', border: 'none',
+            color: currentWeek === minWeek ? 'var(--dim)' : 'var(--white)',
+            fontSize: '20px', cursor: currentWeek === minWeek ? 'not-allowed' : 'pointer',
+            padding: '0 8px', lineHeight: 1,
+          }}
+        >
+          ‹
+        </button>
 
-        return (
-          <div key={week} style={{ marginBottom: '20px' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              marginBottom: '10px',
-            }}>
-              <div style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: '15px', fontWeight: 800,
-                letterSpacing: '1px', textTransform: 'uppercase',
-              }}>
-                Week {week}
-              </div>
-              <div style={{
-                fontSize: '10px', fontWeight: 700,
-                padding: '2px 8px', borderRadius: '10px',
-                background: 'var(--green-bg)', color: 'var(--green)',
-                border: '1px solid var(--green-border)',
-                letterSpacing: '.5px',
-              }}>
-                COMPLETE
-              </div>
-              <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-            </div>
-
-            {visible.map(race => (
-              <RaceDoneCard
-                key={race.id}
-                race={race}
-                userBets={userBets}
-              />
-            ))}
-
-            {hasMore && (
-              <button
-                onClick={() => toggleWeek(week)}
-                style={{
-                  width: '100%', padding: '6px',
-                  background: 'transparent', color: 'var(--muted)',
-                  border: '0.5px solid var(--border)', borderRadius: '5px',
-                  fontSize: '12px', cursor: 'pointer', marginTop: '2px',
-                }}
-              >
-                {isExpanded
-                  ? 'Hide older races ▲'
-                  : `Show ${weekRaces.length - 4} more races ▼`}
-              </button>
-            )}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: '18px', fontWeight: 800,
+            letterSpacing: '1px', textTransform: 'uppercase',
+          }}>
+            Week {currentWeek}
           </div>
-        )
-      })}
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+            {weekRaces.length} race{weekRaces.length !== 1 ? 's' : ''} · Week {minWeek} – {maxWeek}
+          </div>
+        </div>
+
+        <button
+          onClick={() => setCurrentWeek(w => Math.min(maxWeek, (w ?? maxWeek) + 1))}
+          disabled={currentWeek === maxWeek}
+          style={{
+            background: 'none', border: 'none',
+            color: currentWeek === maxWeek ? 'var(--dim)' : 'var(--white)',
+            fontSize: '20px', cursor: currentWeek === maxWeek ? 'not-allowed' : 'pointer',
+            padding: '0 8px', lineHeight: 1,
+          }}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Week dots */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: '6px',
+        marginBottom: '14px',
+      }}>
+        {weeks.map(w => (
+          <button
+            key={w}
+            onClick={() => setCurrentWeek(w)}
+            style={{
+              width: w === currentWeek ? '20px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              border: 'none',
+              background: w === currentWeek ? 'var(--red2)' : 'var(--border)',
+              cursor: 'pointer',
+              transition: 'all .2s',
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Races for current week */}
+      {weekRaces.length === 0 && (
+        <div style={{ color: 'var(--dim)', textAlign: 'center', padding: '30px', fontSize: '12px' }}>
+          No settled races for this week yet.
+        </div>
+      )}
+
+      {weekRaces.map(race => (
+        <RaceDoneCard
+          key={race.id}
+          race={race}
+          userBets={userBets}
+        />
+      ))}
     </div>
   )
 }
