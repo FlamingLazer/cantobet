@@ -6,13 +6,198 @@ import { createClient } from '@/lib/supabase'
 interface LeaderboardEntry {
   id: string
   twitch_username: string
-  studs_balance: number
+  points: number
+}
+
+interface UserHistory {
+  id: string
+  odds_at_placement: number
+  points_earned: number | null
+  status: 'pending' | 'won' | 'lost'
+  placed_at: string
+  race_runner?: {
+    runner?: { username: string; country_code?: string | null }
+    race?: { week: number; rung: number }
+  }
+}
+
+function Flag({ code }: { code?: string | null }) {
+  if (!code) return null
+  return (
+    <img
+      src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`}
+      alt={code}
+      style={{ width: '14px', height: '10px', objectFit: 'cover', borderRadius: '2px', flexShrink: 0 }}
+    />
+  )
+}
+
+function UserHistoryModal({
+  userId,
+  username,
+  onClose,
+}: {
+  userId: string
+  username: string
+  onClose: () => void
+}) {
+  const [history, setHistory] = useState<UserHistory[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase
+      .from('bets')
+      .select(`
+        id, odds_at_placement, points_earned, status, placed_at,
+        race_runner:race_runners(
+          runner:runners(username, country_code),
+          race:races(week, rung)
+        )
+      `)
+      .eq('user_id', userId)
+      .neq('status', 'pending')
+      .order('placed_at', { ascending: false })
+      .then(({ data }) => {
+        setHistory((data as unknown as UserHistory[]) ?? [])
+        setLoading(false)
+      })
+  }, [userId])
+
+  const totalPoints = history
+    .filter(h => h.status === 'won')
+    .reduce((sum, h) => sum + (h.points_earned ?? 0), 0)
+  const correct = history.filter(h => h.status === 'won').length
+  const accuracy = history.length > 0 ? Math.round((correct / history.length) * 100) : 0
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(10,12,20,0.85)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '80px 12px 12px',
+      }}
+    >
+      <div style={{
+        background: 'var(--navy2)',
+        border: '0.5px solid var(--borderb)',
+        borderRadius: '10px',
+        width: '480px',
+        maxHeight: 'calc(100vh - 100px)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 18px',
+          background: 'var(--navy3)',
+          borderBottom: '0.5px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: '18px', fontWeight: 800,
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}>
+            {username}
+            <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--muted)' }}>
+              Prediction History
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }}
+          >✕</button>
+        </div>
+
+        <div style={{ padding: '14px 18px', overflowY: 'auto', flex: 1 }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--dim)' }}>Loading...</div>
+          ) : (
+            <>
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+                {[
+                  { val: totalPoints.toFixed(1), label: 'Total points', color: 'var(--gold)' },
+                  { val: `${correct}/${history.length}`, label: 'Correct', color: 'var(--green)' },
+                  { val: `${accuracy}%`, label: 'Accuracy', color: 'var(--blue)' },
+                ].map((s, i) => (
+                  <div key={i} style={{
+                    background: 'var(--navy3)', border: '0.5px solid var(--border)',
+                    borderRadius: '6px', padding: '9px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '.5px' }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* History */}
+              {history.length === 0 && (
+                <div style={{ textAlign: 'center', color: 'var(--dim)', padding: '20px', fontSize: '12px' }}>
+                  No settled predictions yet.
+                </div>
+              )}
+              {history.map(h => {
+                const won = h.status === 'won'
+                const race = h.race_runner?.race
+                const runner = h.race_runner?.runner
+                return (
+                  <div key={h.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '7px 0',
+                    borderBottom: '0.5px solid var(--border)',
+                    fontSize: '12px',
+                  }}>
+                    <div>
+                      <div style={{
+                        fontFamily: "'Barlow Condensed', sans-serif",
+                        fontSize: '13px', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                      }}>
+                        <Flag code={runner?.country_code} />
+                        {runner?.username ?? '—'} wins
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+                        {race ? `W${race.week} · Rung ${race.rung}` : '—'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        fontSize: '13px', fontWeight: 700,
+                        color: won ? 'var(--green)' : 'var(--red2)',
+                      }}>
+                        {won ? `+${(h.points_earned ?? 0).toFixed(1)}pts` : '✕'}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
+                        {won ? 'correct' : 'incorrect'}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -25,8 +210,8 @@ export default function Leaderboard() {
   async function fetchLeaderboard() {
     const { data } = await supabase
       .from('users')
-      .select('id, twitch_username, studs_balance')
-      .order('studs_balance', { ascending: false })
+      .select('id, twitch_username, points')
+      .order('points', { ascending: false })
       .limit(50)
 
     setEntries(data ?? [])
@@ -48,13 +233,13 @@ export default function Leaderboard() {
     return (
       <div style={{ color: 'var(--dim)', padding: '60px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: '28px', marginBottom: '10px' }}>🏅</div>
-        <div>No users yet — be the first to sign in!</div>
+        <div>No predictions yet — be the first!</div>
       </div>
     )
   }
 
   return (
-    <div>
+    <>
       <div style={{
         background: 'var(--navy2)',
         border: '0.5px solid var(--border)',
@@ -76,7 +261,7 @@ export default function Leaderboard() {
         }}>
           <span>#</span>
           <span>Username</span>
-          <span style={{ textAlign: 'right' }}>Studs</span>
+          <span style={{ textAlign: 'right' }}>Points</span>
         </div>
 
         {entries.map((entry, i) => {
@@ -92,6 +277,15 @@ export default function Leaderboard() {
                 borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
                 background: isYou ? 'rgba(212,170,58,0.06)' : 'transparent',
                 alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'background .12s',
+              }}
+              onClick={() => setViewingUser({ id: entry.id, username: entry.twitch_username })}
+              onMouseEnter={e => {
+                if (!isYou) (e.currentTarget as HTMLDivElement).style.background = 'var(--navy3)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.background = isYou ? 'rgba(212,170,58,0.06)' : 'transparent'
               }}
             >
               <div style={{
@@ -121,9 +315,7 @@ export default function Leaderboard() {
                     YOU
                   </span>
                 )}
-                {i === 0 && (
-                  <span style={{ fontSize: '14px' }}>👑</span>
-                )}
+                {i === 0 && <span style={{ fontSize: '14px' }}>👑</span>}
               </div>
 
               <div style={{
@@ -132,12 +324,20 @@ export default function Leaderboard() {
                 color: 'var(--gold)',
                 fontVariantNumeric: 'tabular-nums',
               }}>
-                {entry.studs_balance.toLocaleString()}
+                {(entry.points ?? 0).toFixed(1)}
               </div>
             </div>
           )
         })}
       </div>
-    </div>
+
+      {viewingUser && (
+        <UserHistoryModal
+          userId={viewingUser.id}
+          username={viewingUser.username}
+          onClose={() => setViewingUser(null)}
+        />
+      )}
+    </>
   )
 }

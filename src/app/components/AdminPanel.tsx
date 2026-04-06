@@ -42,7 +42,7 @@ interface UserRow {
 }
 
 export default function AdminPanel() {
-  const [activeSection, setActiveSection] = useState<'races' | 'settle' | 'futures' | 'users' | 'audit'>('races')
+  const [activeSection, setActiveSection] = useState<'races' | 'settle' | 'users' | 'audit'>('races')
   const [runners, setRunners] = useState<Runner[]>([])
   const [races, setRaces] = useState<RaceRow[]>([])
   const [settledRaces, setSettledRaces] = useState<RaceRow[]>([])
@@ -349,7 +349,6 @@ export default function AdminPanel() {
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {sectionBtn('races', 'Create Race')}
         {sectionBtn('settle', 'Settle Races')}
-        {sectionBtn('futures', 'Futures Odds')}
         {sectionBtn('users', 'Users')}
         {sectionBtn('audit', 'Audit Log')}
       </div>
@@ -678,11 +677,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* FUTURES ODDS */}
-      {activeSection === 'futures' && (
-        <FuturesOddsPanel onToast={showToast} onRefresh={fetchAudit} />
-      )}
-
       {/* USERS */}
       {activeSection === 'users' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -932,103 +926,6 @@ export default function AdminPanel() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-    </div>
-  )
-}
-
-function FuturesOddsPanel({ onToast, onRefresh }: { onToast: (msg: string) => void; onRefresh: () => void }) {
-  const [markets, setMarkets] = useState<{ id: string; market: string; odds: number | null; runner: { username: string } | null }[]>([])
-  const [odds, setOdds] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
-  const supabase = createClient()
-
-  useEffect(() => {
-    supabase
-      .from('futures_markets')
-      .select('id, market, odds, runner:runners(username)')
-      .order('market')
-      .then(({ data }) => {
-        setMarkets((data as unknown as typeof markets) ?? [])
-        const initial: Record<string, string> = {}
-        data?.forEach((m: any) => { initial[m.id] = m.odds?.toString() ?? '' })
-        setOdds(initial)
-      })
-  }, [])
-
-  async function saveOdds() {
-    setSaving(true)
-    for (const [id, val] of Object.entries(odds)) {
-      const parsed = parseFloat(val)
-      if (!isNaN(parsed)) {
-        await supabase.from('futures_markets').update({ odds: parsed }).eq('id', id)
-      }
-    }
-    onToast('Futures odds updated')
-    onRefresh()
-    setSaving(false)
-  }
-
-  return (
-    <div style={{
-      background: 'var(--navy2)', border: '0.5px solid var(--border)',
-      borderRadius: '8px', padding: '14px',
-    }}>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
-        Futures Odds
-      </div>
-
-      {markets.length === 0 && (
-        <div style={{ color: 'var(--dim)', textAlign: 'center', padding: '20px', fontSize: '12px' }}>
-          No futures markets yet. Add runners to the futures_markets table in Supabase to get started.
-        </div>
-      )}
-
-      {markets.map(m => (
-        <div key={m.id} style={{
-          display: 'grid', gridTemplateColumns: '80px 1fr 120px',
-          gap: '10px', alignItems: 'center',
-          padding: '6px 0', borderBottom: '0.5px solid var(--border)',
-        }}>
-          <span style={{
-            fontSize: '9px', fontWeight: 800,
-            padding: '2px 6px', borderRadius: '3px',
-            background: m.market === 'champion' ? 'var(--gold-bg)' : 'var(--blue-bg)',
-            color: m.market === 'champion' ? 'var(--gold)' : 'var(--blue)',
-            border: `1px solid ${m.market === 'champion' ? 'var(--gold-dim)' : 'var(--blue-border)'}`,
-            textAlign: 'center',
-          }}>
-            {m.market === 'champion' ? 'CHAMPION' : 'TOP 8'}
-          </span>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
-            {m.runner?.username}
-          </span>
-          <input
-            type="number"
-            placeholder="e.g. 5.50"
-            value={odds[m.id] ?? ''}
-            step={0.25} min={1}
-            onChange={e => setOdds(prev => ({ ...prev, [m.id]: e.target.value }))}
-            style={{ background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '6px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
-          />
-        </div>
-      ))}
-
-      {markets.length > 0 && (
-        <button
-          onClick={saveOdds}
-          disabled={saving}
-          style={{
-            width: '100%', marginTop: '10px', padding: '9px',
-            background: saving ? 'var(--navy4)' : 'var(--orange)',
-            color: '#fff', border: 'none', borderRadius: '5px',
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: '14px', fontWeight: 800,
-            cursor: saving ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {saving ? 'Saving...' : 'Save Odds'}
-        </button>
-      )}
     </div>
   )
 }

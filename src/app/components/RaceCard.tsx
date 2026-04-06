@@ -4,8 +4,8 @@ import type { RaceWithRunners, RaceRunner } from '@/types'
 
 interface RaceCardProps {
   race: RaceWithRunners
-  userBets: Record<string, string>
-  onBetPlaced: (raceRunnerId: string, raceId: string) => void
+  userPicks: Record<string, string>
+  onPickPlaced: (raceRunnerId: string, raceId: string) => void
   slipPicks: string[]
   onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
   onRemoveFromSlip: (id: string) => void
@@ -43,8 +43,8 @@ function Flag({ code }: { code?: string | null }) {
 
 export default function RaceCard({
   race,
-  userBets,
-  onBetPlaced,
+  userPicks,
+  onPickPlaced,
   slipPicks,
   onAddToSlip,
   onRemoveFromSlip,
@@ -52,7 +52,7 @@ export default function RaceCard({
   const rungStyle = rungColors[race.rung] ?? rungColors[7]
   const isLocked = race.status === 'locked'
   const isPast = new Date(race.scheduled_at) <= new Date()
-  const existingBet = userBets[race.id]
+  const existingPick = userPicks[race.id]
 
   const eliminationRung = 8 - race.week
   const isEliminationRung = race.rung === eliminationRung
@@ -67,6 +67,17 @@ export default function RaceCard({
     weekday: 'short', month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
   })
+
+  async function submitPick(raceRunnerId: string) {
+    const res = await fetch('/api/bets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ race_runner_id: raceRunnerId }),
+    })
+    if (res.ok) {
+      onPickPlaced(raceRunnerId, race.id)
+    }
+  }
 
   return (
     <div style={{
@@ -156,7 +167,7 @@ export default function RaceCard({
         ))}
       </div>
 
-      {/* Odds buttons */}
+      {/* Predict buttons */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr 1fr',
@@ -165,11 +176,8 @@ export default function RaceCard({
         borderTop: '0.5px solid var(--border)',
       }}>
         {race.race_runners.map((rr: RaceRunner) => {
-          const alreadyBet = existingBet === rr.id
-          const inSlip = slipPicks.includes(rr.id)
-          const anotherPickInThisRace = slipPicks.some(id =>
-            race.race_runners.some(r => r.id === id && r.id !== rr.id)
-          )
+          const isPicked = existingPick === rr.id
+          const isInSlip = slipPicks.includes(rr.id)
           const disabled = isLocked || isPast
 
           return (
@@ -177,34 +185,22 @@ export default function RaceCard({
               key={rr.id}
               disabled={disabled}
               onClick={() => {
-                if (inSlip) {
-                  onRemoveFromSlip(rr.id)
-                } else {
-                  onAddToSlip(
-                    rr.id,
-                    rr.runner?.username ?? '',
-                    rr.odds ?? 0,
-                    `W${race.week} · Rung ${race.rung}`,
-                    race.id,
-                  )
-                }
+                if (existingPick) return
+                submitPick(rr.id)
               }}
               style={{
                 padding: '7px 5px',
                 borderRadius: '5px',
                 border: `0.5px solid ${
-                  alreadyBet ? 'var(--green)'
-                  : inSlip ? 'var(--red2)'
+                  isPicked ? 'var(--green)'
                   : 'var(--borderb)'
                 }`,
-                background: alreadyBet ? 'var(--green-bg)'
-                  : inSlip ? 'var(--red-bg)'
-                  : 'var(--navy2)',
+                background: isPicked ? 'var(--green-bg)' : 'var(--navy2)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
-                cursor: disabled ? 'not-allowed' : 'pointer',
+                cursor: disabled || existingPick ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.5
-                  : anotherPickInThisRace && !inSlip ? 0.4
+                  : existingPick && !isPicked ? 0.4
                   : 1,
                 transition: 'all .15s',
               }}
@@ -213,7 +209,7 @@ export default function RaceCard({
                 fontSize: '9px', color: 'var(--dim)',
                 letterSpacing: '.5px', fontWeight: 700,
               }}>
-                {alreadyBet ? 'YOUR BET' : inSlip ? 'IN SLIP ✓' : 'WINS'}
+                {isPicked ? 'YOUR PICK ✓' : 'PREDICT'}
               </div>
               <div style={{
                 fontSize: '11px', fontWeight: 700,
@@ -230,7 +226,7 @@ export default function RaceCard({
                 fontSize: '13px', fontWeight: 700,
                 color: 'var(--gold)',
               }}>
-                {rr.odds ? `${rr.odds}x` : 'TBD'}
+                {rr.odds ? `${rr.odds}pts` : 'TBD'}
               </div>
             </button>
           )

@@ -9,8 +9,7 @@ interface NavProps {
 export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
   const tabs = [
     { id: 'races', label: 'Races' },
-    { id: 'futures', label: 'Futures' },
-    { id: 'my-bets', label: 'My Bets' },
+    { id: 'my-picks', label: 'My Picks' },
     { id: 'history', label: 'History' },
     { id: 'leaderboard', label: 'Leaderboard' },
     ...(isAdmin ? [{ id: 'admin', label: '⚙ Admin' }] : []),

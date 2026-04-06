@@ -6,18 +6,17 @@ import type { User } from '@supabase/supabase-js'
 import ProfileModal from './ProfileModal'
 
 interface HeaderProps {
-  studsBalance: number
-  onBalanceUpdate: (balance: number) => void
+  points: number
+  onPointsUpdate: (points: number) => void
   isAdmin: boolean
   onAdminChange: (isAdmin: boolean) => void
 }
 
-export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdminChange }: HeaderProps) {
+export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [username, setUsername] = useState<string | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [isLive, setIsLive] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -37,7 +36,7 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
       } else {
         setUsername(null)
         onAdminChange(false)
-        onBalanceUpdate(0)
+        onPointsUpdate(0)
         setProfileLoading(false)
       }
     })
@@ -45,32 +44,18 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
-    checkLive()
-    const interval = setInterval(checkLive, 120_000)
-    return () => clearInterval(interval)
-  }, [])
-
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('users')
-      .select('is_admin, studs_balance, twitch_username')
+      .select('is_admin, points, twitch_username')
       .eq('id', userId)
       .single()
     if (data) {
       onAdminChange(data.is_admin)
-      onBalanceUpdate(data.studs_balance)
+      onPointsUpdate(data.points ?? 0)
       setUsername(data.twitch_username)
     }
     setProfileLoading(false)
-  }
-
-  async function checkLive() {
-    try {
-      const res = await fetch('/api/stream-status')
-      const data = await res.json()
-      setIsLive(data.live)
-    } catch {}
   }
 
   async function signInWithTwitch() {
@@ -88,7 +73,7 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
     setUser(null)
     setUsername(null)
     onAdminChange(false)
-    onBalanceUpdate(0)
+    onPointsUpdate(0)
     setProfileOpen(false)
     setProfileLoading(false)
   }
@@ -118,22 +103,6 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isLive && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '5px',
-              fontSize: '11px', fontWeight: 700, color: 'var(--red2)',
-              background: 'var(--red-bg)', border: '1px solid var(--red-border)',
-              borderRadius: '4px', padding: '4px 9px',
-            }}>
-              <div style={{
-                width: '6px', height: '6px', borderRadius: '50%',
-                background: 'var(--red2)',
-                animation: 'pulse 1.2s infinite',
-              }} />
-              LIVE
-            </div>
-          )}
-
           {!profileLoading && (
             user ? (
               <>
@@ -155,7 +124,7 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
                     background: 'var(--gold)',
                     flexShrink: 0,
                   }} />
-                  {studsBalance.toLocaleString()} Studs
+                  {points.toFixed(1)} pts
                 </div>
 
                 <div
@@ -215,13 +184,6 @@ export default function Header({ studsBalance, onBalanceUpdate, isAdmin, onAdmin
           )}
         </div>
       </header>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.2; }
-        }
-      `}</style>
 
       {profileOpen && user && (
         <ProfileModal

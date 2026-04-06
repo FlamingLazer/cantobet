@@ -7,25 +7,17 @@ import type { RaceWithRunners } from '@/types'
 
 interface RacesFeedProps {
   hideFormatBox?: boolean
-  slipPicks: string[]
-  onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
-  onRemoveFromSlip: (id: string) => void
 }
 
-export default function RacesFeed({
-  hideFormatBox = false,
-  slipPicks,
-  onAddToSlip,
-  onRemoveFromSlip,
-}: RacesFeedProps) {
+export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
   const [races, setRaces] = useState<RaceWithRunners[]>([])
   const [loading, setLoading] = useState(true)
-  const [userBets, setUserBets] = useState<Record<string, string>>({})
+  const [userPicks, setUserPicks] = useState<Record<string, string>>({})
   const supabase = createClient()
 
   useEffect(() => {
     fetchRaces()
-    fetchUserBets()
+    fetchUserPicks()
   }, [])
 
   async function fetchRaces() {
@@ -35,7 +27,7 @@ export default function RacesFeed({
     setLoading(false)
   }
 
-  async function fetchUserBets() {
+  async function fetchUserPicks() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -52,12 +44,12 @@ export default function RacesFeed({
           map[b.race_runner.race_id] = b.race_runner_id
         }
       })
-      setUserBets(map)
+      setUserPicks(map)
     }
   }
 
-  function handleBetPlaced(raceRunnerId: string, raceId: string) {
-    setUserBets(prev => ({ ...prev, [raceId]: raceRunnerId }))
+  function handlePickPlaced(raceRunnerId: string, raceId: string) {
+    setUserPicks(prev => ({ ...prev, [raceId]: raceRunnerId }))
   }
 
   const byWeek = races.reduce((acc, race) => {
@@ -104,7 +96,7 @@ export default function RacesFeed({
             1v1v1 · Ladder League
           </div>
           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-            3 runners race simultaneously — fastest time wins. Bet on who wins each race. Betting closes when the race starts.
+            3 runners race simultaneously — fastest time wins. Predict the winner of each race to earn points.
           </div>
           <div style={{ display: 'flex', gap: '5px', marginTop: '6px', flexWrap: 'wrap' }}>
             {[
@@ -147,11 +139,11 @@ export default function RacesFeed({
               <RaceCard
                 key={race.id}
                 race={race}
-                userBets={userBets}
-                onBetPlaced={handleBetPlaced}
-                slipPicks={slipPicks}
-                onAddToSlip={onAddToSlip}
-                onRemoveFromSlip={onRemoveFromSlip}
+                userPicks={userPicks}
+                onPickPlaced={handlePickPlaced}
+                slipPicks={[]}
+                onAddToSlip={() => {}}
+                onRemoveFromSlip={() => {}}
               />
             ))}
           </div>

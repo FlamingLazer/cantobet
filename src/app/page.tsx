@@ -7,61 +7,14 @@ import Nav from './components/Nav'
 import RacesFeed from './components/RacesFeed'
 import HistoryFeed from './components/HistoryFeed'
 import Leaderboard from './components/Leaderboard'
-import FuturesFeed from './components/FuturesFeed'
 import AdminPanel from './components/AdminPanel'
-import WatchEarn from './components/WatchEarn'
-import StreamEmbed from './components/StreamEmbed'
-import BetSlip, { SlipPick } from './components/BetSlip'
 import MyBets from './components/MyBets'
-import { useHeartbeat } from '@/hooks/useHeartbeat'
-
-const channel = 'lazer_flaming'
-
-const formatBox = (
-  <div style={{
-    background: 'var(--navy3)',
-    border: '0.5px solid var(--borderb)',
-    borderRadius: '7px',
-    padding: '9px 12px',
-    marginBottom: '10px',
-  }}>
-    <div style={{
-      fontSize: '12px', fontWeight: 700, color: 'var(--white)',
-      marginBottom: '3px',
-      fontFamily: "'Barlow Condensed', sans-serif",
-      letterSpacing: '.5px', textTransform: 'uppercase',
-    }}>
-      1v1v1 · Ladder League
-    </div>
-    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-      3 runners race simultaneously — fastest time wins. Bet on who wins each race. Betting closes when the race starts.
-    </div>
-    <div style={{ display: 'flex', gap: '5px', marginTop: '6px', flexWrap: 'wrap' }}>
-      {[
-        { label: '🥇 1st → moves up / qualifies', bg: '#1a1608', color: 'var(--gold)', border: 'var(--gold-dim)' },
-        { label: '🥈 2nd → moves up', bg: 'var(--blue-bg)', color: 'var(--blue)', border: 'var(--blue-border)' },
-        { label: '🥉 3rd → drops down', bg: 'var(--red-bg)', color: 'var(--red2)', border: 'var(--red-border)' },
-      ].map(p => (
-        <span key={p.label} style={{
-          fontSize: '10px', fontWeight: 700, padding: '2px 8px',
-          borderRadius: '10px', background: p.bg, color: p.color,
-          border: `1px solid ${p.border}`,
-        }}>
-          {p.label}
-        </span>
-      ))}
-    </div>
-  </div>
-)
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('races')
   const [isAdmin, setIsAdmin] = useState(false)
-  const [studsBalance, setStudsBalance] = useState(0)
+  const [points, setPoints] = useState(0)
   const [loggedIn, setLoggedIn] = useState(false)
-  const [watchKey, setWatchKey] = useState(0)
-  const [isLive, setIsLive] = useState(false)
-  const [slipPicks, setSlipPicks] = useState<SlipPick[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -70,13 +23,13 @@ export default function Home() {
         setLoggedIn(true)
         supabase
           .from('users')
-          .select('is_admin, studs_balance')
+          .select('is_admin, points')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
             if (data) {
               setIsAdmin(data.is_admin)
-              setStudsBalance(data.studs_balance)
+              setPoints(data.points ?? 0)
             }
           })
       }
@@ -86,60 +39,18 @@ export default function Home() {
       setLoggedIn(!!session?.user)
       if (!session?.user) {
         setIsAdmin(false)
-        setStudsBalance(0)
+        setPoints(0)
       }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  function handleStudsCredited(amount: number, newBalance: number) {
-    setStudsBalance(newBalance)
-    setWatchKey(k => k + 1)
-  }
-
-  useHeartbeat({
-    enabled: loggedIn,
-    onStudsCredited: handleStudsCredited,
-  })
-
-  function addToSlip(
-    id: string,
-    runner: string,
-    odds: number,
-    sublabel: string,
-    raceId?: string,
-    type: 'race' | 'future' = 'race',
-  ) {
-    // One pick per race
-    if (raceId) {
-      setSlipPicks(prev => {
-        const filtered = prev.filter(p => p.raceId !== raceId)
-        return [...filtered, { id, type, label: `${runner} wins`, sublabel, odds, raceId }]
-      })
-    } else {
-      setSlipPicks(prev => {
-        const filtered = prev.filter(p => p.id !== id)
-        return [...filtered, { id, type, label: runner, sublabel, odds }]
-      })
-    }
-  }
-
-  function removeFromSlip(id: string) {
-    setSlipPicks(prev => prev.filter(p => p.id !== id))
-  }
-
-  function clearSlip() {
-    setSlipPicks([])
-  }
-
-  const slipPickIds = slipPicks.map(p => p.id)
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--navy)' }}>
       <Header
-        studsBalance={studsBalance}
-        onBalanceUpdate={setStudsBalance}
+        points={points}
+        onPointsUpdate={setPoints}
         isAdmin={isAdmin}
         onAdminChange={setIsAdmin}
       />
@@ -149,65 +60,15 @@ export default function Home() {
         onTabChange={setActiveTab}
       />
       <div style={{
-        maxWidth: '1300px',
+        maxWidth: '900px',
         margin: '0 auto',
         padding: '16px',
-        display: 'grid',
-        gridTemplateColumns: '1fr 280px',
-        gap: '16px',
-        alignItems: 'start',
       }}>
-        <main>
-          {activeTab === 'races' && (
-            <>
-              {formatBox}
-              <StreamEmbed isLive={isLive} channel={channel} />
-              <RacesFeed
-                hideFormatBox
-                slipPicks={slipPickIds}
-                onAddToSlip={(id, runner, odds, label, raceId) =>
-                  addToSlip(id, runner, odds, label, raceId, 'race')
-                }
-                onRemoveFromSlip={removeFromSlip}
-              />
-            </>
-          )}
-          {activeTab === 'futures' && (
-            <>
-              <StreamEmbed isLive={isLive} channel={channel} />
-              <FuturesFeed
-                slipPicks={slipPickIds}
-                onAddToSlip={(id, runner, odds, sublabel) =>
-                  addToSlip(id, runner, odds, sublabel, undefined, 'future')
-                }
-                onRemoveFromSlip={removeFromSlip}
-              />
-            </>
-          )}
-          {activeTab === 'history' && <HistoryFeed />}
-          {activeTab === 'my-bets' && <MyBets />}
-          {activeTab === 'leaderboard' && <Leaderboard />}
-          {activeTab === 'admin' && <AdminPanel />}
-        </main>
-
-        <aside style={{ position: 'sticky', top: '68px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <BetSlip
-            picks={slipPicks}
-            onRemove={removeFromSlip}
-            onClear={clearSlip}
-            onBetsPlaced={newBalance => {
-              setStudsBalance(newBalance)
-              setSlipPicks([])
-            }}
-            studsBalance={studsBalance}
-          />
-          <WatchEarn
-            key={watchKey}
-            loggedIn={loggedIn}
-            onStudsCredited={handleStudsCredited}
-            onLiveChange={setIsLive}
-          />
-        </aside>
+        {activeTab === 'races' && <RacesFeed />}
+        {activeTab === 'my-picks' && <MyBets />}
+        {activeTab === 'history' && <HistoryFeed />}
+        {activeTab === 'leaderboard' && <Leaderboard />}
+        {activeTab === 'admin' && <AdminPanel />}
       </div>
     </div>
   )
