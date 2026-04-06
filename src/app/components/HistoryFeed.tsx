@@ -411,7 +411,7 @@ export default function HistoryFeed() {
             Week {currentWeek}
           </div>
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
-           {weekRaces.length} race{weekRaces.length !== 1 ? 's' : ''} · {weeks.length} week{weeks.length !== 1 ? 's' : ''} total
+           {weekRaces.length} race{weekRaces.length !== 1 ? 's' : ''}
           </div>
         </div>
 
