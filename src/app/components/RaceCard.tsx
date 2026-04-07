@@ -198,7 +198,7 @@ export default function RaceCard({
         {race.race_runners.map((rr: RaceRunner) => {
           const isPicked = existingPick === rr.id
           const isSelected = selectedRR === rr.id
-          const disabled = isLocked || isPast || !!existingPick
+          const disabled = isLocked || isPast
 
           return (
             <button
@@ -223,7 +223,7 @@ export default function RaceCard({
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled && !isPicked ? 0.5 : 1,
+                opacity: disabled ? 0.5 : 1,
                 transition: 'all .15s',
               }}
             >
@@ -256,7 +256,7 @@ export default function RaceCard({
       </div>
 
       {/* Confirmation panel */}
-      {selectedRR && !existingPick && (
+      {selectedRR && (
         <div style={{
           padding: '10px 12px',
           borderTop: '0.5px solid var(--border)',
@@ -266,12 +266,10 @@ export default function RaceCard({
             fontSize: '12px', color: 'var(--muted)',
             marginBottom: '8px', textAlign: 'center',
           }}>
-            Predict <strong style={{ color: 'var(--white)' }}>
-              {selectedRunner?.runner?.username}
-            </strong> wins for{' '}
-            <strong style={{ color: 'var(--gold)' }}>
-              {selectedRunner?.odds}pts
-            </strong> if correct
+            {existingPick
+              ? <>{`Change pick to `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` for `}<strong style={{ color: 'var(--gold)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
+              : <>{`Predict `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` wins for `}<strong style={{ color: 'var(--gold)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
+            }
           </div>
 
           {error && (
@@ -297,7 +295,7 @@ export default function RaceCard({
                 cursor: submitting ? 'not-allowed' : 'pointer',
               }}
             >
-              {submitting ? 'Confirming...' : 'Confirm Pick'}
+              {submitting ? 'Confirming...' : existingPick ? 'Change Pick' : 'Confirm Pick'}
             </button>
             <button
               onClick={() => { setSelectedRR(null); setError(null) }}

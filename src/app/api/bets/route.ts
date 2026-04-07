@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Race has already started' }, { status: 409 })
     }
 
+    const odds = raceRunner.odds ?? 0
+
     // Get all runner IDs for this race
     const { data: raceRunnerIds, error: rrIdsError } = await service
       .from('race_runners')
@@ -63,12 +65,27 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     if (existingBet) {
-      return NextResponse.json({ error: 'You have already predicted this race' }, { status: 409 })
+      // Update existing prediction to new runner
+      const { data: bet, error: updateError } = await service
+        .from('bets')
+        .update({
+          race_runner_id,
+          odds_at_placement: odds,
+          potential_payout: odds,
+        })
+        .eq('id', existingBet.id)
+        .select()
+        .single()
+
+      if (updateError || !bet) {
+        console.error('Bet update error:', updateError)
+        return NextResponse.json({ error: updateError?.message ?? 'Failed to update prediction' }, { status: 500 })
+      }
+
+      return NextResponse.json({ bet, updated: true }, { status: 200 })
     }
 
-    const odds = raceRunner.odds ?? 0
-
-    // Insert prediction
+    // Insert new prediction
     const { data: bet, error: betError } = await service
       .from('bets')
       .insert({
