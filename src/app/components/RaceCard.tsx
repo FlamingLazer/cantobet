@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { RaceWithRunners, RaceRunner } from '@/types'
 
 interface RaceCardProps {
@@ -49,6 +50,10 @@ export default function RaceCard({
   onAddToSlip,
   onRemoveFromSlip,
 }: RaceCardProps) {
+  const [selectedRR, setSelectedRR] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const rungStyle = rungColors[race.rung] ?? rungColors[7]
   const isLocked = race.status === 'locked'
   const isPast = new Date(race.scheduled_at) <= new Date()
@@ -68,16 +73,31 @@ export default function RaceCard({
     hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
   })
 
-  async function submitPick(raceRunnerId: string) {
-    const res = await fetch('/api/bets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ race_runner_id: raceRunnerId }),
-    })
-    if (res.ok) {
-      onPickPlaced(raceRunnerId, race.id)
+  async function confirmPick() {
+    if (!selectedRR || submitting) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/bets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ race_runner_id: selectedRR }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error)
+      } else {
+        onPickPlaced(selectedRR, race.id)
+        setSelectedRR(null)
+      }
+    } catch {
+      setError('Something went wrong')
+    } finally {
+      setSubmitting(false)
     }
   }
+
+  const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
 
   return (
     <div style={{
@@ -177,31 +197,33 @@ export default function RaceCard({
       }}>
         {race.race_runners.map((rr: RaceRunner) => {
           const isPicked = existingPick === rr.id
-          const isInSlip = slipPicks.includes(rr.id)
-          const disabled = isLocked || isPast
+          const isSelected = selectedRR === rr.id
+          const disabled = isLocked || isPast || !!existingPick
 
           return (
             <button
               key={rr.id}
               disabled={disabled}
               onClick={() => {
-                if (existingPick) return
-                submitPick(rr.id)
+                if (disabled) return
+                setSelectedRR(isSelected ? null : rr.id)
+                setError(null)
               }}
               style={{
                 padding: '7px 5px',
                 borderRadius: '5px',
                 border: `0.5px solid ${
                   isPicked ? 'var(--green)'
+                  : isSelected ? 'var(--red2)'
                   : 'var(--borderb)'
                 }`,
-                background: isPicked ? 'var(--green-bg)' : 'var(--navy2)',
+                background: isPicked ? 'var(--green-bg)'
+                  : isSelected ? 'var(--red-bg)'
+                  : 'var(--navy2)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
-                cursor: disabled || existingPick ? 'not-allowed' : 'pointer',
-                opacity: disabled ? 0.5
-                  : existingPick && !isPicked ? 0.4
-                  : 1,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled && !isPicked ? 0.5 : 1,
                 transition: 'all .15s',
               }}
             >
@@ -209,7 +231,7 @@ export default function RaceCard({
                 fontSize: '9px', color: 'var(--dim)',
                 letterSpacing: '.5px', fontWeight: 700,
               }}>
-                {isPicked ? 'YOUR PICK ✓' : 'PREDICT'}
+                {isPicked ? 'YOUR PICK ✓' : isSelected ? 'SELECTED' : 'PREDICT'}
               </div>
               <div style={{
                 fontSize: '11px', fontWeight: 700,
@@ -232,6 +254,65 @@ export default function RaceCard({
           )
         })}
       </div>
+
+      {/* Confirmation panel */}
+      {selectedRR && !existingPick && (
+        <div style={{
+          padding: '10px 12px',
+          borderTop: '0.5px solid var(--border)',
+          background: 'var(--navy2)',
+        }}>
+          <div style={{
+            fontSize: '12px', color: 'var(--muted)',
+            marginBottom: '8px', textAlign: 'center',
+          }}>
+            Predict <strong style={{ color: 'var(--white)' }}>
+              {selectedRunner?.runner?.username}
+            </strong> wins for{' '}
+            <strong style={{ color: 'var(--gold)' }}>
+              {selectedRunner?.odds}pts
+            </strong> if correct
+          </div>
+
+          {error && (
+            <div style={{
+              fontSize: '11px', color: 'var(--red2)',
+              marginBottom: '8px', textAlign: 'center',
+            }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={confirmPick}
+              disabled={submitting}
+              style={{
+                flex: 1, padding: '9px',
+                background: submitting ? 'var(--navy4)' : 'var(--red2)',
+                color: '#fff', border: 'none', borderRadius: '6px',
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: '15px', fontWeight: 800,
+                letterSpacing: '1px', textTransform: 'uppercase',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {submitting ? 'Confirming...' : 'Confirm Pick'}
+            </button>
+            <button
+              onClick={() => { setSelectedRR(null); setError(null) }}
+              style={{
+                padding: '9px 14px',
+                background: 'transparent', color: 'var(--muted)',
+                border: '0.5px solid var(--border)', borderRadius: '6px',
+                fontSize: '13px', cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
