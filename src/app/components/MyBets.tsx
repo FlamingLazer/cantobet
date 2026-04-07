@@ -144,7 +144,7 @@ export default function MyBets() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
           }}
         >
-          Settled
+          Complete
           {settledPicks.length > 0 && (
             <span style={{
               background: 'var(--green)', color: '#fff',
@@ -211,7 +211,7 @@ export default function MyBets() {
           {settledPicks.length === 0 && (
             <div style={{ color: 'var(--dim)', padding: '40px', textAlign: 'center' }}>
               <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
-              No settled picks yet.
+              No complete picks yet.
             </div>
           )}
           {settledPicks.map(pick => {
