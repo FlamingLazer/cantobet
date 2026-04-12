@@ -7,9 +7,10 @@ import type { RaceWithRunners } from '@/types'
 
 interface RacesFeedProps {
   hideFormatBox?: boolean
+  loggedIn?: boolean
 }
 
-export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
+export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: RacesFeedProps) {
   const [races, setRaces] = useState<RaceWithRunners[]>([])
   const [loading, setLoading] = useState(true)
   const [userPicks, setUserPicks] = useState<Record<string, string>>({})
@@ -144,6 +145,7 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
                 slipPicks={[]}
                 onAddToSlip={() => {}}
                 onRemoveFromSlip={() => {}}
+                loggedIn={loggedIn}
               />
             ))}
           </div>

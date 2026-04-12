@@ -10,6 +10,7 @@ interface RaceCardProps {
   slipPicks: string[]
   onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
   onRemoveFromSlip: (id: string) => void
+  loggedIn?: boolean
 }
 
 const rungColors: Record<number, { bg: string; color: string; border: string }> = {
@@ -44,6 +45,7 @@ export default function RaceCard({
   slipPicks,
   onAddToSlip,
   onRemoveFromSlip,
+  loggedIn = false,
 }: RaceCardProps) {
   const [selectedRR, setSelectedRR] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -253,6 +255,13 @@ export default function RaceCard({
           borderTop: '0.5px solid var(--border)',
           background: 'var(--navy2)',
         }}>
+          {!loggedIn ? (
+            <div style={{ textAlign: 'center', padding: '4px 0' }}>
+              <div style={{ fontSize: '14px', color: 'var(--white)', fontWeight: 700, marginBottom: '4px' }}>Login to Predict</div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Sign in with Twitch to make predictions.</div>
+            </div>
+          ) : (
+            <>
           <div style={{
             fontSize: '12px', color: 'var(--muted)',
             marginBottom: '8px', textAlign: 'center',
@@ -302,6 +311,8 @@ export default function RaceCard({
               Cancel
             </button>
           </div>
+            </>
+          )}
         </div>
       )}
     </div>

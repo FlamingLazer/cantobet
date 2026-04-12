@@ -65,8 +65,8 @@ export default function Home() {
         margin: '0 auto',
         padding: '16px',
       }}>
-        {activeTab === 'races' && <RacesFeed />}
-        {activeTab === 'my-picks' && <MyBets />}
+        {activeTab === 'races' && <RacesFeed loggedIn={loggedIn} />}
+        {activeTab === 'my-picks' && <MyBets loggedIn={loggedIn} />}
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'admin' && <AdminPanel />}
       </div>

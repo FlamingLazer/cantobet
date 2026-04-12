@@ -27,7 +27,7 @@ function Flag({ code }: { code?: string | null }) {
   )
 }
 
-export default function MyBets() {
+export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
   const [picks, setPicks] = useState<Pick[]>([])
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState<'active' | 'settled'>('active')
@@ -71,6 +71,16 @@ export default function MyBets() {
   const accuracy = settledPicks.length > 0
     ? Math.round((correctPicks / settledPicks.length) * 100)
     : 0
+
+  if (!loggedIn) {
+    return (
+      <div style={{ color: 'var(--muted)', padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: '28px', marginBottom: '10px' }}>🔒</div>
+        <div style={{ fontSize: '15px', color: 'var(--white)' }}>Login to Predict</div>
+        <div style={{ fontSize: '13px', marginTop: '6px' }}>Sign in with Twitch to make predictions and track your picks.</div>
+      </div>
+    )
+  }
 
   if (loading) {
     return <div style={{ color: 'var(--muted)', padding: '40px', textAlign: 'center' }}>Loading picks...</div>
