@@ -11,6 +11,7 @@ interface RaceCardProps {
   onAddToSlip: (id: string, runner: string, odds: number, label: string, raceId: string) => void
   onRemoveFromSlip: (id: string) => void
   loggedIn?: boolean
+  ladderPbs?: Record<string, string>
 }
 
 const rungColors: Record<number, { bg: string; color: string; border: string }> = {
@@ -46,6 +47,7 @@ export default function RaceCard({
   onAddToSlip,
   onRemoveFromSlip,
   loggedIn = false,
+  ladderPbs = {},
 }: RaceCardProps) {
   const [selectedRR, setSelectedRR] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -63,7 +65,7 @@ export default function RaceCard({
     ? 'Winner qualifies for Top 8'
     : isEliminationRung
     ? '2nd & 3rd eliminated'
-    : 'Top 2 advance · Last drops'
+    : ''
 
   const scheduledTime = new Date(race.scheduled_at).toLocaleString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric',
@@ -170,11 +172,16 @@ export default function RaceCard({
               <Flag code={rr.runner?.country_code} />
               {rr.runner?.username}
             </span>
-            <span style={{
-              fontSize: '12px', color: 'var(--dim)',
-              marginLeft: 'auto', whiteSpace: 'nowrap',
-            }}>
-              PB {formatPB(rr.runner?.pb?.toString())}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+              <span style={{ width: '55px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
+                {rr.runner?.seed != null ? `Seed ${rr.runner.seed}` : ''}
+              </span>
+              <span style={{ width: '140px', textAlign: 'left', fontSize: '11px', color: 'var(--muted)' }}>
+                {rr.runner?.id && ladderPbs[rr.runner.id] ? `Ladder PB: ${formatPB(ladderPbs[rr.runner.id])}` : ''}
+              </span>
+              <span style={{ width: '90px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
+                {rr.runner?.pb ? `PB: ${formatPB(rr.runner.pb)}` : ''}
+              </span>
             </span>
           </div>
         ))}

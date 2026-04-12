@@ -14,11 +14,13 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
   const [races, setRaces] = useState<RaceWithRunners[]>([])
   const [loading, setLoading] = useState(true)
   const [userPicks, setUserPicks] = useState<Record<string, string>>({})
+  const [ladderPbs, setLadderPbs] = useState<Record<string, string>>({})
   const supabase = createClient()
 
   useEffect(() => {
     fetchRaces()
     fetchUserPicks()
+    fetchLadderPbs()
   }, [])
 
   async function fetchRaces() {
@@ -47,6 +49,12 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
       })
       setUserPicks(map)
     }
+  }
+
+  async function fetchLadderPbs() {
+    const res = await fetch('/api/ladder-pbs')
+    const data = await res.json()
+    setLadderPbs(data ?? {})
   }
 
   function handlePickPlaced(raceRunnerId: string, raceId: string) {
@@ -146,6 +154,7 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
                 onAddToSlip={() => {}}
                 onRemoveFromSlip={() => {}}
                 loggedIn={loggedIn}
+                ladderPbs={ladderPbs}
               />
             ))}
           </div>
