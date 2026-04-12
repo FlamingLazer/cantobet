@@ -8,19 +8,26 @@ export async function GET(
   const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
 
-  if (id !== user.id) {
-    const { data: profile } = await service
-      .from('users')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-    if (!profile?.is_admin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  const isOwnProfile = user?.id === id
+
+  const betsQuery = service
+    .from('bets')
+    .select(`
+      id, odds_at_placement, points_earned, status, placed_at,
+      race_runner:race_runners(
+        odds,
+        runner:runners(username, character, country_code),
+        race:races(week, rung, status, scheduled_at)
+      )
+    `)
+    .eq('user_id', id)
+    .order('placed_at', { ascending: false })
+
+  if (!isOwnProfile) {
+    betsQuery.neq('status', 'pending')
   }
 
   const [
@@ -28,18 +35,7 @@ export async function GET(
     { data: bets },
   ] = await Promise.all([
     service.from('users').select('*').eq('id', id).single(),
-    service
-      .from('bets')
-      .select(`
-        id, odds_at_placement, points_earned, status, placed_at,
-        race_runner:race_runners(
-          odds,
-          runner:runners(username, character, country_code),
-          race:races(week, rung, status, scheduled_at)
-        )
-      `)
-      .eq('user_id', id)
-      .order('placed_at', { ascending: false }),
+    betsQuery,
   ])
 
   const settledBets = bets?.filter((b: { status: string }) => b.status !== 'pending') ?? []

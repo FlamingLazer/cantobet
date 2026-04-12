@@ -43,25 +43,16 @@ function UserHistoryModal({
 }) {
   const [history, setHistory] = useState<UserHistory[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    supabase
-      .from('bets')
-      .select(`
-        id, odds_at_placement, points_earned, status, placed_at,
-        race_runner:race_runners(
-          runner:runners(username, country_code),
-          race:races(week, rung)
-        )
-      `)
-      .eq('user_id', userId)
-      .neq('status', 'pending')
-      .order('placed_at', { ascending: false })
-      .then(({ data }) => {
-        setHistory((data as unknown as UserHistory[]) ?? [])
+    fetch(`/api/users/${userId}/profile`)
+      .then(r => r.json())
+      .then(d => {
+        const settled = (d.bets ?? []).filter((b: UserHistory) => b.status !== 'pending')
+        setHistory(settled)
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [userId])
 
   const totalPoints = history

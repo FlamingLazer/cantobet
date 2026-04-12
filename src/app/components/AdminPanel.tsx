@@ -36,7 +36,7 @@ interface AuditEntry {
 interface UserRow {
   id: string
   twitch_username: string
-  studs_balance: number
+  points: number
   is_admin: boolean
   created_at: string
 }
@@ -145,8 +145,8 @@ export default function AdminPanel() {
   async function fetchUsers() {
     const { data } = await supabase
       .from('users')
-      .select('id, twitch_username, studs_balance, is_admin, created_at')
-      .order('studs_balance', { ascending: false })
+      .select('id, twitch_username, points, is_admin, created_at')
+      .order('points', { ascending: false })
     setUsers((data as UserRow[]) ?? [])
   }
 
@@ -285,14 +285,14 @@ export default function AdminPanel() {
     if (!amount || !adjReason) { showToast('Fill in all fields'); return }
 
     setAdjusting(true)
-    const res = await fetch('/api/admin/adjust-studs', {
+    const res = await fetch('/api/admin/adjust-points', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: user.id, amount, reason: adjReason }),
     })
     const data = await res.json()
     if (res.ok) {
-      showToast(`Done! New balance: ${data.new_balance.toLocaleString()} Studs`)
+      showToast(`Done! New points total: ${data.new_balance.toLocaleString()}`)
       setAdjUsername('')
       setAdjAmount('')
       setAdjReason('')
@@ -720,7 +720,7 @@ export default function AdminPanel() {
                   {u.twitch_username}
                 </span>
                 <span style={{ textAlign: 'right', color: 'var(--gold)', fontWeight: 600 }}>
-                  {u.studs_balance.toLocaleString()}
+                  {u.points.toLocaleString()}
                 </span>
                 <span style={{ textAlign: 'right', color: 'var(--dim)', fontSize: '11px' }}>
                   {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -755,7 +755,7 @@ export default function AdminPanel() {
             borderRadius: '8px', padding: '14px',
           }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
-              Manual Studs Adjustment
+              Manual Points Adjustment
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
               <div>
@@ -829,14 +829,14 @@ export default function AdminPanel() {
                 <option value="race_settled">Settlement</option>
                 <option value="race_deleted">Deleted</option>
                 <option value="odds_updated">Odds</option>
-                <option value="studs_adjusted">Studs</option>
+                <option value="studs_adjusted">Points</option>
                 <option value="admin_granted">User</option>
               </select>
             </div>
           </div>
 
           <div style={{
-            display: 'grid', gridTemplateColumns: '130px 90px 1fr 100px',
+            display: 'grid', gridTemplateColumns: '130px 130px 1fr 100px',
             gap: '8px', padding: '0 0 6px',
             borderBottom: '0.5px solid var(--border)',
             fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
@@ -865,7 +865,7 @@ export default function AdminPanel() {
 
             return (
               <div key={entry.id} style={{
-                display: 'grid', gridTemplateColumns: '130px 90px 1fr 100px',
+                display: 'grid', gridTemplateColumns: '130px 130px 1fr 100px',
                 gap: '8px', alignItems: 'baseline',
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
                 fontSize: '12px',
