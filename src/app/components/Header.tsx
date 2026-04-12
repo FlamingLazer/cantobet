@@ -96,7 +96,7 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
           letterSpacing: '3px',
           color: '#ffffff',
         }}>
-          PREDICTIONS
+          <span style={{ color: '#ffffff' }}>PREDIC</span><span style={{ color: '#9aaabb' }}>TIONS</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
