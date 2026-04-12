@@ -93,7 +93,7 @@ export default function MyBets() {
             borderRadius: '6px', padding: '10px', textAlign: 'center',
           }}>
             <div style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontSize: '22px', fontWeight: 800, color: s.color,
             }}>{s.val}</div>
             <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '.5px' }}>{s.label}</div>
@@ -111,7 +111,7 @@ export default function MyBets() {
             border: `0.5px solid ${section === 'active' ? 'var(--red2)' : 'var(--border)'}`,
             background: section === 'active' ? 'var(--red-bg)' : 'var(--navy2)',
             color: section === 'active' ? 'var(--red2)' : 'var(--muted)',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '13px', fontWeight: 800,
             letterSpacing: '.5px', textTransform: 'uppercase',
             cursor: 'pointer',
@@ -137,7 +137,7 @@ export default function MyBets() {
             border: `0.5px solid ${section === 'settled' ? 'var(--green-border)' : 'var(--border)'}`,
             background: section === 'settled' ? 'var(--green-bg)' : 'var(--navy2)',
             color: section === 'settled' ? 'var(--green)' : 'var(--muted)',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '13px', fontWeight: 800,
             letterSpacing: '.5px', textTransform: 'uppercase',
             cursor: 'pointer',
@@ -180,7 +180,7 @@ export default function MyBets() {
               }}>
                 <div>
                   <div style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontFamily: "'Montserrat', sans-serif",
                     fontSize: '14px', fontWeight: 700,
                     display: 'flex', alignItems: 'center', gap: '5px',
                   }}>
@@ -229,7 +229,7 @@ export default function MyBets() {
               }}>
                 <div>
                   <div style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontFamily: "'Montserrat', sans-serif",
                     fontSize: '14px', fontWeight: 700,
                     display: 'flex', alignItems: 'center', gap: '5px',
                   }}>
@@ -244,7 +244,7 @@ export default function MyBets() {
                   <div style={{
                     fontSize: '15px', fontWeight: 700,
                     color: won ? 'var(--green)' : 'var(--red2)',
-                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontFamily: "'Montserrat', sans-serif",
                   }}>
                     {won ? `+${(pick.points_earned ?? 0).toFixed(1)}pts` : '✕'}
                   </div>

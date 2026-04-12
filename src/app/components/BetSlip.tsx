@@ -137,7 +137,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
         textAlign: 'center',
       }}>
         <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           fontSize: '16px', fontWeight: 800,
           letterSpacing: '.5px', textTransform: 'uppercase',
           marginBottom: '10px',
@@ -170,7 +170,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           fontSize: '16px', fontWeight: 800,
           letterSpacing: '.5px', textTransform: 'uppercase',
           display: 'flex', alignItems: 'center', gap: '8px',
@@ -213,7 +213,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
               border: `0.5px solid ${mode === 'singles' ? 'var(--red2)' : 'var(--border)'}`,
               background: mode === 'singles' ? 'var(--red-bg)' : 'var(--navy3)',
               color: mode === 'singles' ? 'var(--red2)' : 'var(--muted)',
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontSize: '12px', fontWeight: 800,
               letterSpacing: '.5px', textTransform: 'uppercase',
               cursor: 'pointer',
@@ -230,7 +230,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
                 border: `0.5px solid ${mode === 'parlay' ? 'var(--gold-dim)' : 'var(--border)'}`,
                 background: mode === 'parlay' ? 'var(--gold-bg)' : 'var(--navy3)',
                 color: mode === 'parlay' ? 'var(--gold)' : 'var(--muted)',
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: '12px', fontWeight: 800,
                 letterSpacing: '.5px', textTransform: 'uppercase',
                 cursor: 'pointer',
@@ -256,7 +256,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
               }}>
                 <div>
                   <div style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontFamily: "'Montserrat', sans-serif",
                     fontSize: '13px', fontWeight: 700,
                     color: 'var(--white)',
                   }}>
@@ -341,7 +341,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
                 <div style={{
                   fontSize: '16px', fontWeight: 700,
                   color: 'var(--gold)',
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                 }}>
                   {parlayPayout.toLocaleString()}
                 </div>
@@ -396,7 +396,7 @@ export default function BetSlip({ picks, onRemove, onClear, onBetsPlaced, studsB
             background: placing ? 'var(--navy4)' : mode === 'parlay' ? 'var(--gold)' : 'var(--red2)',
             color: mode === 'parlay' ? '#000' : '#fff',
             border: 'none', borderRadius: '6px',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '15px', fontWeight: 800,
             letterSpacing: '1px', textTransform: 'uppercase',
             cursor: placing ? 'not-allowed' : 'pointer',

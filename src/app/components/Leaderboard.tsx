@@ -104,7 +104,7 @@ function UserHistoryModal({
           flexShrink: 0,
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '18px', fontWeight: 800,
             display: 'flex', alignItems: 'center', gap: '8px',
           }}>
@@ -135,7 +135,7 @@ function UserHistoryModal({
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
                     borderRadius: '6px', padding: '9px', textAlign: 'center',
                   }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
                     <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '.5px' }}>{s.label}</div>
                   </div>
                 ))}
@@ -160,7 +160,7 @@ function UserHistoryModal({
                   }}>
                     <div>
                       <div style={{
-                        fontFamily: "'Barlow Condensed', sans-serif",
+                        fontFamily: "'Montserrat', sans-serif",
                         fontSize: '13px', fontWeight: 700,
                         display: 'flex', alignItems: 'center', gap: '4px',
                       }}>
@@ -289,7 +289,7 @@ export default function Leaderboard() {
               }}
             >
               <div style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: '16px', fontWeight: 800,
                 color: rankColor(i),
                 textAlign: 'center',
@@ -299,7 +299,7 @@ export default function Leaderboard() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   fontSize: '14px', fontWeight: 600,
                   letterSpacing: '.2px',
                 }}>

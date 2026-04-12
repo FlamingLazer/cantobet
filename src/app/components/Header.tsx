@@ -93,13 +93,13 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
         zIndex: 50,
       }}>
         <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           fontSize: '24px',
           fontWeight: 800,
           letterSpacing: '3px',
-          color: 'var(--white)',
+          color: '#ffffff',
         }}>
-          CANTO<span style={{ color: 'var(--red2)' }}>BET</span>
+          PREDICTIONS
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -47,7 +47,7 @@ export default function StreamEmbed({ isLive, channel }: StreamEmbedProps) {
           }} />
           <span style={{
             fontSize: '12px', fontWeight: 700,
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             letterSpacing: '.5px', color: 'var(--white)',
           }}>
             LIVE NOW
@@ -68,7 +68,7 @@ export default function StreamEmbed({ isLive, channel }: StreamEmbedProps) {
               cursor: 'pointer',
               borderRadius: '4px',
               padding: '2px 8px',
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontWeight: 700,
               letterSpacing: '.5px',
             }}

@@ -36,7 +36,7 @@ export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
             background: 'none',
             cursor: 'pointer',
             borderBottom: `2px solid ${activeTab === tab.id ? (tab.id === 'admin' ? 'var(--orange)' : 'var(--red2)') : 'transparent'}`,
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Rubik', sans-serif",
             letterSpacing: '.8px',
             textTransform: 'uppercase',
             transition: 'all .15s',

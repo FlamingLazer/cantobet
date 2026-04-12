@@ -323,7 +323,7 @@ export default function AdminPanel() {
         borderColor: activeSection === id ? 'var(--borderb)' : 'var(--border)',
         borderRadius: '5px',
         fontSize: '12px', fontWeight: 700,
-        fontFamily: "'Barlow Condensed', sans-serif",
+        fontFamily: "'Montserrat', sans-serif",
         letterSpacing: '.5px', textTransform: 'uppercase',
         cursor: 'pointer',
       }}
@@ -360,7 +360,7 @@ export default function AdminPanel() {
           borderRadius: '8px', padding: '14px',
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '15px', fontWeight: 800, marginBottom: '12px',
           }}>Create Race</div>
 
@@ -427,7 +427,7 @@ export default function AdminPanel() {
               width: '100%', marginTop: '6px', padding: '10px',
               background: creating ? 'var(--navy4)' : 'var(--orange)',
               color: '#fff', border: 'none', borderRadius: '6px',
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontSize: '15px', fontWeight: 800,
               letterSpacing: '.5px', textTransform: 'uppercase',
               cursor: creating ? 'not-allowed' : 'pointer',
@@ -445,7 +445,7 @@ export default function AdminPanel() {
           borderRadius: '8px', padding: '14px',
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '15px', fontWeight: 800, marginBottom: '12px',
           }}>Settle Races</div>
 
@@ -462,7 +462,7 @@ export default function AdminPanel() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (settleRaceId === race.id || editRaceId === race.id) ? '10px' : '0' }}>
                 <div>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: 800 }}>
+                  <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800 }}>
                     W{race.week} · Rung {race.rung}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
@@ -540,7 +540,7 @@ export default function AdminPanel() {
                 <div>
                   {race.race_runners.map(rr => (
                     <div key={rr.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                      <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
                         {rr.runner?.username}
                       </div>
                       <input
@@ -569,7 +569,7 @@ export default function AdminPanel() {
                       width: '100%', padding: '9px',
                       background: settling ? 'var(--navy4)' : 'var(--green)',
                       color: '#fff', border: 'none', borderRadius: '5px',
-                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontFamily: "'Montserrat', sans-serif",
                       fontSize: '15px', fontWeight: 800,
                       letterSpacing: '.5px', cursor: settling ? 'not-allowed' : 'pointer',
                     }}
@@ -596,7 +596,7 @@ export default function AdminPanel() {
                   </div>
                   {race.race_runners.map(rr => (
                     <div key={rr.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                      <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
                         {rr.runner?.username}
                       </div>
                       <input
@@ -615,7 +615,7 @@ export default function AdminPanel() {
                       width: '100%', padding: '8px',
                       background: 'var(--blue)', color: '#fff',
                       border: 'none', borderRadius: '5px',
-                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontFamily: "'Montserrat', sans-serif",
                       fontSize: '14px', fontWeight: 800,
                       cursor: 'pointer',
                     }}
@@ -649,7 +649,7 @@ export default function AdminPanel() {
                   opacity: 0.8,
                 }}>
                   <div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', fontWeight: 800 }}>
+                    <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800 }}>
                       W{race.week} · Rung {race.rung}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
@@ -684,7 +684,7 @@ export default function AdminPanel() {
             background: 'var(--navy2)', border: '0.5px solid var(--border)',
             borderRadius: '8px', padding: '14px',
           }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
               Users
             </div>
             <div style={{
@@ -709,7 +709,7 @@ export default function AdminPanel() {
                 <span
                   onClick={() => setViewingUser({ id: u.id, username: u.twitch_username })}
                   style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontFamily: "'Montserrat', sans-serif",
                     fontSize: '13px', fontWeight: 700,
                     cursor: 'pointer', color: 'var(--white)',
                     textDecoration: 'underline',
@@ -754,7 +754,7 @@ export default function AdminPanel() {
             background: 'var(--navy2)', border: '0.5px solid var(--border)',
             borderRadius: '8px', padding: '14px',
           }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
               Manual Studs Adjustment
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
@@ -790,7 +790,7 @@ export default function AdminPanel() {
                 width: '100%', padding: '9px',
                 background: 'transparent', color: 'var(--orange)',
                 border: '0.5px solid var(--orange-border)', borderRadius: '5px',
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: '14px', fontWeight: 800,
                 cursor: adjusting ? 'not-allowed' : 'pointer',
               }}
@@ -811,7 +811,7 @@ export default function AdminPanel() {
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', marginBottom: '12px', gap: '8px',
           }}>
-            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px', fontWeight: 800 }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800 }}>
               Audit Log
             </div>
             <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-end' }}>
@@ -876,7 +876,7 @@ export default function AdminPanel() {
                     hour: 'numeric', minute: '2-digit',
                   })}
                 </span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
                   {entry.admin?.twitch_username ?? '—'}
                 </span>
                 <span style={{ color: 'var(--muted)', lineHeight: 1.4 }}>

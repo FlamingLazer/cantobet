@@ -110,7 +110,7 @@ export default function ProfileModal({
           flexShrink: 0,
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '18px', fontWeight: 800,
             display: 'flex', alignItems: 'center', gap: '10px',
           }}>
@@ -146,7 +146,7 @@ export default function ProfileModal({
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
                     borderRadius: '6px', padding: '9px 10px', textAlign: 'center',
                   }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
                     <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '3px', letterSpacing: '.5px', textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
@@ -178,7 +178,7 @@ export default function ProfileModal({
                         }}>
                           <div>
                             <div style={{
-                              fontFamily: "'Barlow Condensed', sans-serif",
+                              fontFamily: "'Montserrat', sans-serif",
                               fontSize: '13px', fontWeight: 700,
                               display: 'flex', alignItems: 'center', gap: '4px',
                             }}>

@@ -94,7 +94,7 @@ export default function FuturesFeed({ slipPicks, onAddToSlip, onRemoveFromSlip }
           )}
           <div>
             <div style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontSize: '14px', fontWeight: 700,
               color: inSlip ? 'var(--red2)' : 'var(--white)',
               letterSpacing: '.3px',
@@ -150,7 +150,7 @@ export default function FuturesFeed({ slipPicks, onAddToSlip, onRemoveFromSlip }
           marginBottom: '12px',
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '16px', fontWeight: 800,
             letterSpacing: '.5px', textTransform: 'uppercase',
             marginBottom: '2px',
@@ -175,7 +175,7 @@ export default function FuturesFeed({ slipPicks, onAddToSlip, onRemoveFromSlip }
           marginBottom: '12px',
         }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '16px', fontWeight: 800,
             letterSpacing: '.5px', textTransform: 'uppercase',
             marginBottom: '2px',

@@ -47,7 +47,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--navy)' }}>
+    <div style={{ minHeight: '100vh' }}>
       <Header
         points={points}
         onPointsUpdate={setPoints}

@@ -90,7 +90,7 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
           <div style={{
             fontSize: '12px', fontWeight: 700, color: 'var(--white)',
             marginBottom: '3px',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             letterSpacing: '.5px', textTransform: 'uppercase',
           }}>
             1v1v1 · Ladder League
@@ -126,7 +126,7 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
               marginBottom: '10px',
             }}>
               <div style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: '15px', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase',
               }}>

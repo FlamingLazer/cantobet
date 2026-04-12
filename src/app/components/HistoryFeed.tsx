@@ -103,7 +103,7 @@ function RaceDoneCard({
           fontSize: '10px', fontWeight: 800,
           padding: '2px 8px', borderRadius: '3px',
           letterSpacing: '.8px',
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           background: rungStyle.bg,
           color: rungStyle.color,
           border: `1px solid ${rungStyle.border}`,
@@ -119,7 +119,7 @@ function RaceDoneCard({
           <span style={{ fontSize: '12px' }}>🏆</span>
           <Flag code={winner?.runner?.country_code} />
           <span style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '14px', fontWeight: 800,
             color: 'var(--gold)', letterSpacing: '.3px',
           }}>
@@ -232,7 +232,7 @@ function RaceDoneCard({
                 padding: '3px 0',
               }}>
                 <div style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   fontSize: '14px', fontWeight: 800,
                   color: posColor, width: '14px', textAlign: 'center',
                 }}>
@@ -240,7 +240,7 @@ function RaceDoneCard({
                 </div>
                 <div style={{
                   fontSize: '12px', flex: 1,
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   fontWeight: 600, letterSpacing: '.2px',
                   display: 'flex', alignItems: 'center', gap: '4px',
                 }}>
@@ -404,7 +404,7 @@ export default function HistoryFeed() {
 
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             fontSize: '18px', fontWeight: 800,
             letterSpacing: '1px', textTransform: 'uppercase',
           }}>

@@ -121,7 +121,7 @@ export default function RaceCard({
             fontSize: '10px', fontWeight: 800,
             padding: '2px 8px', borderRadius: '3px',
             letterSpacing: '.8px',
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
             background: rungStyle.bg,
             color: rungStyle.color,
             border: `1px solid ${rungStyle.border}`,
@@ -167,7 +167,7 @@ export default function RaceCard({
           }}>
             <span style={{
               fontSize: '13px', fontWeight: 700, flex: 1,
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Montserrat', sans-serif",
               letterSpacing: '.3px',
               display: 'flex', alignItems: 'center', gap: '5px',
             }}>
@@ -236,7 +236,7 @@ export default function RaceCard({
               <div style={{
                 fontSize: '11px', fontWeight: 700,
                 color: 'var(--white)',
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 textAlign: 'center',
                 display: 'flex', alignItems: 'center',
                 justifyContent: 'center', gap: '3px',
@@ -289,7 +289,7 @@ export default function RaceCard({
                 flex: 1, padding: '9px',
                 background: submitting ? 'var(--navy4)' : 'var(--red2)',
                 color: '#fff', border: 'none', borderRadius: '6px',
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Montserrat', sans-serif",
                 fontSize: '15px', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase',
                 cursor: submitting ? 'not-allowed' : 'pointer',

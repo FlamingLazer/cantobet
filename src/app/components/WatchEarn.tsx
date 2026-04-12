@@ -106,7 +106,7 @@ export default function WatchEarn({ loggedIn, onStudsCredited, onLiveChange }: W
         </svg>
         <span style={{
           fontSize: '13px', fontWeight: 700,
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           letterSpacing: '.3px',
         }}>
           Watch to Earn

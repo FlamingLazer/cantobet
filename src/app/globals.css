@@ -1,45 +1,71 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&family=Montserrat:wght@400;900&display=swap');
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  --navy: #1a1f2e;
-  --navy2: #222840;
-  --navy3: #2a3050;
-  --navy4: #323a5a;
-  --red: #c0392b;
-  --red2: #e74c3c;
-  --red-bg: #2a1515;
-  --red-border: #6e2020;
-  --white: #f0f2f8;
-  --muted: #8890b0;
-  --dim: #4a5070;
-  --gold: #d4aa3a;
-  --gold-bg: #1e1a08;
-  --gold-dim: #7a6020;
-  --green: #27ae60;
-  --green-bg: #0d1a0d;
-  --green-border: #1a4020;
-  --blue: #3a7bd5;
-  --blue-bg: #0d1828;
-  --blue-border: #1e3a6a;
-  --orange: #e67e22;
-  --orange-bg: #1e1208;
-  --orange-border: #6e3808;
-  --border: #2a3050;
-  --borderb: #3d4670;
+  --bg:        #07080f;
+  --bg2:       #0a0c16;
+  --surface:   #0f111c;
+  --border:    #1a1e30;
+  --accent:    #9aaabb;
+  --accent2:   #c0cad8;
+  --gold:      #d8dde8;
+  --text:      #7a8899;
+  --dim:       #5a6478;
+  /* legacy aliases kept for component compatibility */
+  --navy:      #0a0c16;
+  --navy2:     #0f111c;
+  --navy3:     #141828;
+  --navy4:     #1a1e30;
+  --white:     #c0cad8;
+  --muted:     #7a8899;
+  --red:       #c0392b;
+  --red2:      #e74c3c;
+  --red-bg:    #1a0d0d;
+  --red-border:#4a1a1a;
+  --gold-bg:   #12100a;
+  --gold-dim:  #5a4a20;
+  --green:     #27ae60;
+  --green-bg:  #081208;
+  --green-border: #1a3a1a;
+  --blue:      #3a7bd5;
+  --blue-bg:   #080e1a;
+  --blue-border: #1a2e50;
+  --orange:    #e67e22;
+  --orange-bg: #120c06;
+  --orange-border: #4a2a08;
+  --borderb:   #232840;
 }
 
 body {
-  background: var(--navy);
-  color: var(--white);
-  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
   font-size: 14px;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background glow */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 55% at 50% 50%, #0a1a3a 0%, #060d1f 45%, #020408 100%);
+  filter: blur(15px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure page content sits above the glow */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 a {
@@ -52,7 +78,7 @@ button {
 }
 
 input, select, textarea {
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 @keyframes pulse {
