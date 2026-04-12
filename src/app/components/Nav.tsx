@@ -10,14 +10,14 @@ export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
   const tabs = [
     { id: 'races', label: 'Races' },
     { id: 'my-picks', label: 'My Picks' },
-    { id: 'history', label: 'History' },
     { id: 'leaderboard', label: 'Leaderboard' },
     ...(isAdmin ? [{ id: 'admin', label: '⚙ Admin' }] : []),
   ]
 
   return (
     <nav style={{
-      background: 'var(--navy2)',
+      background: 'rgba(8,11,16,.92)',
+      backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       padding: '0 20px',

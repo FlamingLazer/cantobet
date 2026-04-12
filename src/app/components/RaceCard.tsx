@@ -13,13 +13,13 @@ interface RaceCardProps {
 }
 
 const rungColors: Record<number, { bg: string; color: string; border: string }> = {
-  1: { bg: 'var(--red)',   color: '#fff',    border: 'var(--red)' },
-  2: { bg: 'var(--navy4)', color: '#8ab0f0', border: '#3d4a80' },
-  3: { bg: 'var(--navy3)', color: '#6a80b0', border: 'var(--borderb)' },
-  4: { bg: 'var(--navy2)', color: '#5a6890', border: 'var(--border)' },
-  5: { bg: 'var(--navy2)', color: '#4a5878', border: 'var(--border)' },
-  6: { bg: 'var(--navy2)', color: '#3d4868', border: 'var(--border)' },
-  7: { bg: 'var(--navy2)', color: '#323860', border: 'var(--border)' },
+  1: { bg: 'var(--gold-bg)', color: 'var(--gold)', border: 'var(--gold-dim)' },
+  2: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
+  3: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
+  4: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
+  5: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
+  6: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
+  7: { bg: 'var(--navy3)', color: '#6a80b0', border: '#3d4a80' },
 }
 
 function formatPB(pb?: string): string {
@@ -30,14 +30,9 @@ function formatPB(pb?: string): string {
 function Flag({ code }: { code?: string | null }) {
   if (!code) return null
   return (
-    <img
-      src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`}
-      alt={code}
-      style={{
-        width: '16px', height: '12px',
-        objectFit: 'cover', borderRadius: '2px',
-        flexShrink: 0,
-      }}
+    <span
+      className={`fi fi-${code.toLowerCase()}`}
+      style={{ width: '22px', height: '16px', borderRadius: '2px', flexShrink: 0 }}
     />
   )
 }
@@ -118,24 +113,23 @@ export default function RaceCard({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{
-            fontSize: '10px', fontWeight: 800,
+            fontSize: '12px', fontWeight: 800,
             padding: '2px 8px', borderRadius: '3px',
-            letterSpacing: '.8px',
             fontFamily: "'Montserrat', sans-serif",
             background: rungStyle.bg,
             color: rungStyle.color,
             border: `1px solid ${rungStyle.border}`,
           }}>
-            RUNG {race.rung}
+            Rung {race.rung}
           </span>
-          <span style={{ fontSize: '10px', color: 'var(--muted)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
             {rungNote}
           </span>
         </div>
 
         {isLocked || isPast ? (
           <span style={{
-            fontSize: '10px', fontWeight: 700,
+            fontSize: '12px', fontWeight: 700,
             color: 'var(--gold)',
             background: 'var(--gold-bg)',
             border: '1px solid var(--gold-dim)',
@@ -144,7 +138,7 @@ export default function RaceCard({
             🔒 LOCKED
           </span>
         ) : (
-          <span style={{ fontSize: '10px', color: 'var(--dim)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--dim)' }}>
             {scheduledTime}
           </span>
         )}
@@ -166,19 +160,16 @@ export default function RaceCard({
             border: '0.5px solid var(--border)',
           }}>
             <span style={{
-              fontSize: '13px', fontWeight: 700, flex: 1,
+              fontSize: '15px', fontWeight: 700, flex: 1,
               fontFamily: "'Montserrat', sans-serif",
-              letterSpacing: '.3px',
+              letterSpacing: '.3px', color: 'var(--white)',
               display: 'flex', alignItems: 'center', gap: '5px',
             }}>
               <Flag code={rr.runner?.country_code} />
               {rr.runner?.username}
             </span>
-            <span style={{ fontSize: '10px', color: 'var(--muted)' }}>
-              {rr.runner?.character}
-            </span>
             <span style={{
-              fontSize: '10px', color: 'var(--dim)',
+              fontSize: '12px', color: 'var(--dim)',
               marginLeft: 'auto', whiteSpace: 'nowrap',
             }}>
               PB {formatPB(rr.runner?.pb?.toString())}
@@ -228,13 +219,13 @@ export default function RaceCard({
               }}
             >
               <div style={{
-                fontSize: '9px', color: 'var(--dim)',
+                fontSize: '11px', color: 'var(--dim)',
                 letterSpacing: '.5px', fontWeight: 700,
               }}>
                 {isPicked ? 'YOUR PICK ✓' : isSelected ? 'SELECTED' : 'PREDICT'}
               </div>
               <div style={{
-                fontSize: '11px', fontWeight: 700,
+                fontSize: '13px', fontWeight: 700,
                 color: 'var(--white)',
                 fontFamily: "'Montserrat', sans-serif",
                 textAlign: 'center',
@@ -245,10 +236,10 @@ export default function RaceCard({
                 {rr.runner?.username}
               </div>
               <div style={{
-                fontSize: '13px', fontWeight: 700,
-                color: 'var(--gold)',
+                fontSize: '15px', fontWeight: 700,
+                color: 'var(--white)',
               }}>
-                {rr.odds ? `${rr.odds}pts` : 'TBD'}
+                {rr.odds ? `${rr.odds} pts` : 'TBD'}
               </div>
             </button>
           )
@@ -267,8 +258,8 @@ export default function RaceCard({
             marginBottom: '8px', textAlign: 'center',
           }}>
             {existingPick
-              ? <>{`Change pick to `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` for `}<strong style={{ color: 'var(--gold)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
-              : <>{`Predict `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` wins for `}<strong style={{ color: 'var(--gold)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
+              ? <>{`Change pick to `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` for `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
+              : <>{`Predict `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` wins for `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
             }
           </div>
 
@@ -287,12 +278,14 @@ export default function RaceCard({
               disabled={submitting}
               style={{
                 flex: 1, padding: '9px',
-                background: submitting ? 'var(--navy4)' : 'var(--red2)',
-                color: '#fff', border: 'none', borderRadius: '6px',
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: '15px', fontWeight: 800,
-                letterSpacing: '1px', textTransform: 'uppercase',
+                background: submitting ? 'var(--navy4)' : 'var(--accent)',
+                color: 'var(--bg)', border: 'none',
+                fontFamily: "'Rubik', sans-serif",
+                fontSize: '15px', fontWeight: 700,
+                letterSpacing: '2px', textTransform: 'uppercase',
                 cursor: submitting ? 'not-allowed' : 'pointer',
+                borderRadius: '6px',
+                transition: 'background .2s',
               }}
             >
               {submitting ? 'Confirming...' : existingPick ? 'Change Pick' : 'Confirm Pick'}

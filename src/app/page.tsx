@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase'
 import Header from './components/Header'
 import Nav from './components/Nav'
 import RacesFeed from './components/RacesFeed'
-import HistoryFeed from './components/HistoryFeed'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
 import MyBets from './components/MyBets'
@@ -48,17 +47,19 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Header
-        points={points}
-        onPointsUpdate={setPoints}
-        isAdmin={isAdmin}
-        onAdminChange={setIsAdmin}
-      />
-      <Nav
-        activeTab={activeTab}
-        isAdmin={isAdmin}
-        onTabChange={setActiveTab}
-      />
+      <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+        <Header
+          points={points}
+          onPointsUpdate={setPoints}
+          isAdmin={isAdmin}
+          onAdminChange={setIsAdmin}
+        />
+        <Nav
+          activeTab={activeTab}
+          isAdmin={isAdmin}
+          onTabChange={setActiveTab}
+        />
+      </div>
       <div style={{
         maxWidth: '900px',
         margin: '0 auto',
@@ -66,7 +67,6 @@ export default function Home() {
       }}>
         {activeTab === 'races' && <RacesFeed />}
         {activeTab === 'my-picks' && <MyBets />}
-        {activeTab === 'history' && <HistoryFeed />}
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'admin' && <AdminPanel />}
       </div>

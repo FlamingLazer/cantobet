@@ -81,16 +81,13 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
   return (
     <>
       <header style={{
-        background: 'var(--navy2)',
-        borderBottom: '1px solid var(--border)',
+        background: 'rgba(8,11,16,.92)',
+        backdropFilter: 'blur(12px)',
         padding: '0 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '52px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
       }}>
         <div style={{
           fontFamily: "'Montserrat', sans-serif",

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&family=Montserrat:wght@400;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&family=Montserrat:wght@400;600;700;800;900&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -13,7 +13,7 @@
   --border:    #1a1e30;
   --accent:    #9aaabb;
   --accent2:   #c0cad8;
-  --gold:      #d8dde8;
+  --gold:      #d4aa3a;
   --text:      #7a8899;
   --dim:       #5a6478;
   /* legacy aliases kept for component compatibility */
@@ -75,6 +75,7 @@ a {
 
 button {
   cursor: pointer;
+  font-family: inherit;
 }
 
 input, select, textarea {

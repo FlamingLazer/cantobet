@@ -88,14 +88,14 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
           marginBottom: '14px',
         }}>
           <div style={{
-            fontSize: '12px', fontWeight: 700, color: 'var(--white)',
+            fontSize: '14px', fontWeight: 700, color: 'var(--white)',
             marginBottom: '3px',
             fontFamily: "'Montserrat', sans-serif",
             letterSpacing: '.5px', textTransform: 'uppercase',
           }}>
             1v1v1 · Ladder League
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
             3 runners race simultaneously — fastest time wins. Predict the winner of each race to earn points.
           </div>
           <div style={{ display: 'flex', gap: '5px', marginTop: '6px', flexWrap: 'wrap' }}>
@@ -105,7 +105,7 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
               { label: '🥉 3rd → drops down', bg: 'var(--red-bg)', color: 'var(--red2)', border: 'var(--red-border)' },
             ].map(p => (
               <span key={p.label} style={{
-                fontSize: '10px', fontWeight: 700, padding: '2px 8px',
+                fontSize: '12px', fontWeight: 700, padding: '2px 8px',
                 borderRadius: '10px', background: p.bg, color: p.color,
                 border: `1px solid ${p.border}`,
               }}>
@@ -127,8 +127,8 @@ export default function RacesFeed({ hideFormatBox = false }: RacesFeedProps) {
             }}>
               <div style={{
                 fontFamily: "'Montserrat', sans-serif",
-                fontSize: '15px', fontWeight: 800,
-                letterSpacing: '1px', textTransform: 'uppercase',
+                fontSize: '17px', fontWeight: 800,
+                letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--white)',
               }}>
                 Week {week}
               </div>
