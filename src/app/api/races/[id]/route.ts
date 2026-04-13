@@ -127,7 +127,7 @@ export async function PATCH(
 
     const { error } = await service
       .from('races')
-      .update({ status: 'open' })
+      .update({ status: 'open', manually_unlocked: true })
       .eq('id', id)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
