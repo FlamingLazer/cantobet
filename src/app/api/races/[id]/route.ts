@@ -110,7 +110,37 @@ export async function PATCH(
   }
 
   const body = await req.json()
-  const { scheduled_at, odds } = body
+  const { scheduled_at, odds, status } = body
+
+  // Unlock: locked → open
+  if (status === 'open') {
+    const { data: race } = await service
+      .from('races')
+      .select('week, rung, status')
+      .eq('id', id)
+      .single()
+
+    if (!race) return NextResponse.json({ error: 'Race not found' }, { status: 404 })
+    if (race.status !== 'locked') {
+      return NextResponse.json({ error: 'Only locked races can be unlocked' }, { status: 409 })
+    }
+
+    const { error } = await service
+      .from('races')
+      .update({ status: 'open' })
+      .eq('id', id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    await writeAuditLog({
+      admin_user_id: user.id,
+      action_type: 'race_unlocked',
+      description: `Unlocked W${race.week} · Rung ${race.rung} — race reopened for predictions`,
+      metadata: { race_id: id, week: race.week, rung: race.rung },
+    })
+
+    return NextResponse.json({ success: true })
+  }
 
   if (scheduled_at) {
     await service

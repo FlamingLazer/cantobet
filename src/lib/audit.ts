@@ -11,6 +11,7 @@ interface AuditParams {
     | 'admin_granted'
     | 'admin_revoked'
     | 'futures_odds_updated'
+    | 'race_unlocked'
   description: string
   metadata?: Record<string, unknown>
 }

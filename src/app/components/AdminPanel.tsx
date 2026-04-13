@@ -262,6 +262,22 @@ export default function AdminPanel() {
     }
   }
 
+  async function unlockRace(raceId: string) {
+    const res = await fetch(`/api/races/${raceId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'open' }),
+    })
+    if (res.ok) {
+      showToast('Race unlocked — predictions reopened')
+      fetchRaces()
+      fetchAudit()
+    } else {
+      const data = await res.json()
+      showToast(`Error: ${data.error}`)
+    }
+  }
+
   async function toggleAdmin(userId: string, current: boolean) {
     const res = await fetch('/api/admin/toggle-admin', {
       method: 'POST',
@@ -479,6 +495,16 @@ export default function AdminPanel() {
                   }}>
                     {race.status.toUpperCase()}
                   </span>
+
+                  {/* Unlock button — only for locked races */}
+                  {race.status === 'locked' && (
+                    <button
+                      onClick={() => unlockRace(race.id)}
+                      style={{ padding: '5px 10px', background: 'var(--gold-bg)', color: 'var(--gold)', border: '0.5px solid var(--gold-dim)', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Unlock
+                    </button>
+                  )}
 
                   {/* Settle button */}
                   {settleRaceId === race.id ? (
