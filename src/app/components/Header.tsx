@@ -92,7 +92,7 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
       }}>
         <img src="/logo.png" alt="Logo" style={{ height: '52px', width: 'auto' }} />
 
-        <div style={{
+        <div className="mobile-hide" style={{
           position: 'absolute', left: '50%', transform: 'translateX(-50%)',
           fontFamily: "'Montserrat', sans-serif",
           fontSize: '24px',

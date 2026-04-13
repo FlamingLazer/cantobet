@@ -173,7 +173,7 @@ export default function RaceCard({
               <Flag code={rr.runner?.country_code} />
               {rr.runner?.username}
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+            <span className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '0', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
               <span style={{ width: '55px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
                 {rr.runner?.seed != null ? `Seed ${rr.runner.seed}` : ''}
               </span>

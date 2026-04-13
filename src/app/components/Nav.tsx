@@ -16,7 +16,7 @@ export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
   ]
 
   return (
-    <nav style={{
+    <nav className="mobile-nav" style={{
       background: 'rgba(8,11,16,.92)',
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border)',
