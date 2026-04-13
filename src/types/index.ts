@@ -28,6 +28,7 @@ export interface Race {
   winner_runner_id: string | null
   is_top8_qualifier: boolean
   manually_unlocked: boolean
+  stage?: string | null
 }
 
 export interface RaceRunner {

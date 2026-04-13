@@ -62,6 +62,15 @@ export default function AdminPanel() {
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
   const [newTime, setNewTime] = useState('')
+  const [newFormat, setNewFormat] = useState<2 | 3>(3)
+  const [newStage, setNewStage] = useState('')
+
+  const stageOptions = [
+    'Quarterfinal 1', 'Quarterfinal 2', 'Quarterfinal 3', 'Quarterfinal 4',
+    'Semifinal 1', 'Semifinal 2',
+    '3rd Place Match',
+    'Grand Final',
+  ]
   const [newRunners, setNewRunners] = useState<{ runner_id: string; odds: string }[]>([
     { runner_id: '', odds: '' },
     { runner_id: '', odds: '' },
@@ -166,15 +175,17 @@ export default function AdminPanel() {
 
   async function createRace() {
     if (!newTime || newRunners.some(r => !r.runner_id)) return
+    if (newFormat === 2 && !newStage) { showToast('Select a stage'); return }
     setCreating(true)
     const res = await fetch('/api/races', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         week: newWeek,
-        rung: newRung,
+        rung: newFormat === 3 ? newRung : undefined,
         scheduled_at: new Date(newTime).toISOString(),
-        is_top8_qualifier: newRung === 1,
+        is_top8_qualifier: newFormat === 2 || newRung === 1,
+        stage: newFormat === 2 ? newStage : undefined,
         runners: newRunners.map(r => ({
           runner_id: r.runner_id,
           odds: parseFloat(r.odds) || null,
@@ -185,11 +196,8 @@ export default function AdminPanel() {
       showToast('Race created!')
       fetchRaces()
       setNewTime('')
-      setNewRunners([
-        { runner_id: '', odds: '' },
-        { runner_id: '', odds: '' },
-        { runner_id: '', odds: '' },
-      ])
+      setNewStage('')
+      setNewRunners(Array.from({ length: newFormat }, () => ({ runner_id: '', odds: '' })))
     } else {
       const d = await res.json()
       showToast(`Error: ${d.error}`)
@@ -398,24 +406,59 @@ export default function AdminPanel() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Week</div>
-              <input type="number" value={newWeek} min={1} onChange={e => setNewWeek(Number(e.target.value))}
-                style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Rung</div>
-              <select value={newRung} onChange={e => setNewRung(Number(e.target.value))}
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Format</div>
+              <select value={newFormat} onChange={e => {
+                const f = Number(e.target.value) as 2 | 3
+                setNewFormat(f)
+                setNewStage('')
+                setNewRunners(Array.from({ length: f }, () => ({ runner_id: '', odds: '' })))
+              }}
                 style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
-                {[1,2,3,4,5,6,7].map(r => (
-                  <option key={r} value={r}>Rung {r}{r === 1 ? ' — Qualifies' : r === 7 ? ' — Elim zone' : ''}</option>
-                ))}
+                <option value={3}>1v1v1</option>
+                <option value={2}>1v1</option>
               </select>
             </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Scheduled time</div>
-              <input type="datetime-local" value={newTime} onChange={e => setNewTime(e.target.value)}
-                style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
-            </div>
+
+            {newFormat === 3 ? (
+              <>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Week</div>
+                  <input type="number" value={newWeek} min={1} onChange={e => setNewWeek(Number(e.target.value))}
+                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Rung</div>
+                  <select value={newRung} onChange={e => setNewRung(Number(e.target.value))}
+                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
+                    {[1,2,3,4,5,6,7].map(r => (
+                      <option key={r} value={r}>Rung {r}{r === 1 ? ' — Qualifies' : r === 7 ? ' — Elim zone' : ''}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Stage</div>
+                  <select value={newStage} onChange={e => setNewStage(e.target.value)}
+                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
+                    <option value="">Select stage</option>
+                    {stageOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Week</div>
+                  <input type="number" value={newWeek} min={1} onChange={e => setNewWeek(Number(e.target.value))}
+                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Scheduled time</div>
+            <input type="datetime-local" value={newTime} onChange={e => setNewTime(e.target.value)}
+              style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
           </div>
 
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px', fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>
@@ -434,7 +477,7 @@ export default function AdminPanel() {
               >
                 <option value="">Select runner {i + 1}</option>
                 {runners.map(r => (
-                  <option key={r.id} value={r.id}>{r.username} (Rung {r.current_rung})</option>
+                  <option key={r.id} value={r.id}>{r.username}{r.seed != null ? ` (Seed ${r.seed})` : ''}</option>
                 ))}
               </select>
               <input

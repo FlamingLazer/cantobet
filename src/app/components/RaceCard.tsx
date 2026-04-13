@@ -125,11 +125,13 @@ export default function RaceCard({
             color: rungStyle.color,
             border: `1px solid ${rungStyle.border}`,
           }}>
-            Rung {race.rung}
+            {race.stage ?? `Rung ${race.rung}`}
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-            {rungNote}
-          </span>
+          {!race.stage && (
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+              {rungNote}
+            </span>
+          )}
         </div>
 
         {isLocked || isPast ? (
@@ -191,7 +193,7 @@ export default function RaceCard({
       {/* Predict buttons */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
+        gridTemplateColumns: race.race_runners.length === 2 ? '1fr 1fr' : '1fr 1fr 1fr',
         gap: '5px',
         padding: '7px 12px',
         borderTop: '0.5px solid var(--border)',

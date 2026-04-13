@@ -12,7 +12,7 @@ interface Pick {
   race_runner?: {
     odds: number
     runner?: { username: string; country_code?: string | null }
-    race?: { week: number; rung: number; status: string; scheduled_at: string }
+    race?: { week: number; rung: number; status: string; scheduled_at: string; stage?: string | null }
   }
 }
 
@@ -198,7 +198,7 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
                     {runner?.username ?? '—'} wins
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
-                    {race ? `W${race.week} · Rung ${race.rung}` : '—'} · {pick.odds_at_placement}pts if correct
+                    {race ? (race.stage ?? `W${race.week} · Rung ${race.rung}`) : '—'} · {pick.odds_at_placement}pts if correct
                   </div>
                 </div>
                 <span style={{
@@ -247,7 +247,7 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
                     {runner?.username ?? '—'} wins
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
-                    {race ? `W${race.week} · Rung ${race.rung}` : '—'}
+                    {race ? (race.stage ?? `W${race.week} · Rung ${race.rung}`) : '—'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

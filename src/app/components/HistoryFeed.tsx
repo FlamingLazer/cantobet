@@ -9,6 +9,7 @@ interface RaceResult {
   rung: number
   scheduled_at: string
   winner_runner_id: string | null
+  stage?: string | null
   race_runners: {
     id: string
     finish_position: number | null
@@ -109,7 +110,7 @@ function RaceDoneCard({
           border: `1px solid ${rungStyle.border}`,
           flexShrink: 0,
         }}>
-          RUNG {race.rung}
+          {race.stage ? race.stage.toUpperCase() : `RUNG ${race.rung}`}
         </span>
 
         <div style={{
@@ -324,7 +325,7 @@ export default function HistoryFeed() {
     const { data } = await supabase
       .from('races')
       .select(`
-        id, week, rung, scheduled_at, winner_runner_id,
+        id, week, rung, stage, scheduled_at, winner_runner_id,
         race_runners (
           id, finish_position, finish_time, leapfrog, leapfrogged,
           runner:runners(username, character, country_code)

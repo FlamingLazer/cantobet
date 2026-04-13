@@ -17,7 +17,7 @@ interface UserHistory {
   placed_at: string
   race_runner?: {
     runner?: { username: string; country_code?: string | null }
-    race?: { week: number; rung: number }
+    race?: { week: number; rung: number; stage?: string | null }
   }
 }
 
@@ -159,7 +159,7 @@ function UserHistoryModal({
                         {runner?.username ?? '—'} wins
                       </div>
                       <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
-                        {race ? `W${race.week} · Rung ${race.rung}` : '—'}
+                        {race ? (race.stage ?? `W${race.week} · Rung ${race.rung}`) : '—'}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

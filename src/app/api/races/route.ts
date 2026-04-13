@@ -36,15 +36,18 @@ export async function POST(req: NextRequest) {
   if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
-  const { week, rung, scheduled_at, is_top8_qualifier, runners } = body
+  const { week, rung, scheduled_at, is_top8_qualifier, runners, stage } = body
 
-  if (!week || !rung || !scheduled_at || !runners?.length) {
+  if (!scheduled_at || !runners?.length) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+  if (!stage && (!week || !rung)) {
+    return NextResponse.json({ error: 'Provide either a stage name or week and rung' }, { status: 400 })
   }
 
   const { data: race, error: raceError } = await service
     .from('races')
-    .insert({ week, rung, scheduled_at, is_top8_qualifier: !!is_top8_qualifier, status: 'open' })
+    .insert({ week: week ?? 0, rung: rung ?? 0, scheduled_at, is_top8_qualifier: !!is_top8_qualifier, status: 'open', stage: stage ?? null })
     .select()
     .single()
 
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
   await writeAuditLog({
     admin_user_id: user.id,
     action_type: 'race_created',
-    description: `Created race W${week} · Rung ${rung} — ${runnerNames}. Scheduled ${new Date(scheduled_at).toLocaleString()}.`,
+    description: `Created race ${stage ?? `W${week} · Rung ${rung}`} — ${runnerNames}. Scheduled ${new Date(scheduled_at).toLocaleString()}.`,
     metadata: { race_id: race.id, week, rung, scheduled_at, runners },
   })
 

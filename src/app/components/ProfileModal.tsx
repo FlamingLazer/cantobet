@@ -10,7 +10,7 @@ interface Pick {
   placed_at: string
   race_runner?: {
     runner?: { username: string; country_code?: string | null }
-    race?: { week: number; rung: number; status: string }
+    race?: { week: number; rung: number; status: string; stage?: string | null }
   }
 }
 
@@ -193,7 +193,7 @@ export default function ProfileModal({
                               </span>
                             </div>
                             <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
-                              {race ? `W${race.week} · Rung ${race.rung}` : '—'} · {pick.odds_at_placement}pts
+                              {race ? (race.stage ?? `W${race.week} · Rung ${race.rung}`) : '—'} · {pick.odds_at_placement}pts
                             </div>
                           </div>
                           <div style={{
