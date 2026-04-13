@@ -256,7 +256,7 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
                     color: won ? 'var(--green)' : 'var(--red2)',
                     fontFamily: "'Montserrat', sans-serif",
                   }}>
-                    {won ? `+${(pick.points_earned ?? 0).toFixed(1)}pts` : '✕'}
+                    {won ? `+${(pick.points_earned ?? 0).toFixed(1)}pts` : '+0.0pts'}
                   </div>
                   <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
                     {won ? 'Correct' : 'Incorrect'}

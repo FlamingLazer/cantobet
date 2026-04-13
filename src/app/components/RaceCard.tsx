@@ -26,7 +26,8 @@ const rungColors: Record<number, { bg: string; color: string; border: string }> 
 
 function formatPB(pb?: string): string {
   if (!pb) return '—'
-  return pb.toString().slice(0, 8)
+  const s = pb.toString().slice(0, 8)
+  return s.startsWith('0') ? s.slice(1) : s
 }
 
 function Flag({ code }: { code?: string | null }) {
@@ -68,8 +69,8 @@ export default function RaceCard({
     : ''
 
   const scheduledTime = new Date(race.scheduled_at).toLocaleString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+    month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
   })
 
   async function confirmPick() {

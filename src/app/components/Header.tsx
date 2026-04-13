@@ -88,13 +88,16 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '52px',
+        position: 'relative',
       }}>
+        <img src="/logo.png" alt="Logo" style={{ height: '52px', width: 'auto' }} />
+
         <div style={{
+          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
           fontFamily: "'Montserrat', sans-serif",
           fontSize: '24px',
           fontWeight: 800,
           letterSpacing: '3px',
-          color: '#ffffff',
         }}>
           <span style={{ color: '#ffffff' }}>PREDIC</span><span style={{ color: '#9aaabb' }}>TIONS</span>
         </div>

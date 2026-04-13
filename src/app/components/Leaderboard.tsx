@@ -167,7 +167,7 @@ function UserHistoryModal({
                         fontSize: '13px', fontWeight: 700,
                         color: won ? 'var(--green)' : 'var(--red2)',
                       }}>
-                        {won ? `+${(h.points_earned ?? 0).toFixed(1)}pts` : '✕'}
+                        {won ? `+${(h.points_earned ?? 0).toFixed(1)}pts` : '+0.0pts'}
                       </div>
                       <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
                         {won ? 'correct' : 'incorrect'}
@@ -250,7 +250,7 @@ export default function Leaderboard() {
           textTransform: 'uppercase',
           background: 'var(--navy3)',
         }}>
-          <span>#</span>
+          <span style={{ textAlign: 'center' }}>#</span>
           <span>Username</span>
           <span style={{ textAlign: 'right' }}>Points</span>
         </div>

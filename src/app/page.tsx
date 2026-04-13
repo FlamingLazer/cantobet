@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import Header from './components/Header'
 import Nav from './components/Nav'
 import RacesFeed from './components/RacesFeed'
+import HistoryFeed from './components/HistoryFeed'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
 import MyBets from './components/MyBets'
@@ -68,7 +69,39 @@ export default function Home() {
         {activeTab === 'races' && <RacesFeed loggedIn={loggedIn} />}
         {activeTab === 'my-picks' && <MyBets loggedIn={loggedIn} />}
         {activeTab === 'leaderboard' && <Leaderboard />}
+        {activeTab === 'history' && isAdmin && <HistoryFeed />}
         {activeTab === 'admin' && <AdminPanel />}
+
+        <div style={{ textAlign: 'center', padding: '32px 16px 16px' }}>
+          <a
+            href="https://ladderleague.run"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              fontFamily: "'Montserrat', sans-serif",
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              letterSpacing: '1.5px',
+              color: 'var(--accent)',
+              border: '1px solid var(--accent)',
+              borderRadius: '4px',
+              padding: '0.5rem 1.2rem',
+              textDecoration: 'none',
+              transition: 'background .15s, color .15s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = 'var(--accent)'
+              ;(e.currentTarget as HTMLAnchorElement).style.color = '#000'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--accent)'
+            }}
+          >
+            Return to LadderLeague.run
+          </a>
+        </div>
       </div>
     </div>
   )

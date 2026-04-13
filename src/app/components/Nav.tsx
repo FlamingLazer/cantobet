@@ -11,6 +11,7 @@ export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
     { id: 'races', label: 'Races' },
     { id: 'my-picks', label: 'My Picks' },
     { id: 'leaderboard', label: 'Leaderboard' },
+    ...(isAdmin ? [{ id: 'history', label: 'History' }] : []),
     ...(isAdmin ? [{ id: 'admin', label: '⚙ Admin' }] : []),
   ]
 

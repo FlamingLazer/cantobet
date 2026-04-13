@@ -200,7 +200,7 @@ export default function ProfileModal({
                             fontSize: '14px', fontWeight: 700,
                             color: won ? 'var(--green)' : lost ? 'var(--red2)' : 'var(--muted)',
                           }}>
-                            {won ? `+${(pick.points_earned ?? 0).toFixed(1)}` : lost ? '✕' : '—'}
+                            {won ? `+${(pick.points_earned ?? 0).toFixed(1)}` : lost ? '+0.0' : '—'}
                           </div>
                         </div>
                       )

@@ -107,21 +107,6 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
           <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
             3 runners race simultaneously — fastest time wins. Predict the winner of each race to earn points.
           </div>
-          <div style={{ display: 'flex', gap: '5px', marginTop: '6px', flexWrap: 'wrap' }}>
-            {[
-              { label: '🥇 1st → moves up / qualifies', bg: '#1a1608', color: 'var(--gold)', border: 'var(--gold-dim)' },
-              { label: '🥈 2nd → moves up', bg: 'var(--blue-bg)', color: 'var(--blue)', border: 'var(--blue-border)' },
-              { label: '🥉 3rd → drops down', bg: 'var(--red-bg)', color: 'var(--red2)', border: 'var(--red-border)' },
-            ].map(p => (
-              <span key={p.label} style={{
-                fontSize: '12px', fontWeight: 700, padding: '2px 8px',
-                borderRadius: '10px', background: p.bg, color: p.color,
-                border: `1px solid ${p.border}`,
-              }}>
-                {p.label}
-              </span>
-            ))}
-          </div>
         </div>
       )}
 

@@ -170,7 +170,7 @@ function RaceDoneCard({
             border: `1px solid ${userBet.status === 'won' ? 'var(--green-border)' : userBet.status === 'lost' ? 'var(--red-border)' : 'var(--border)'}`,
             flexShrink: 0,
           }}>
-            {userBet.status === 'won' ? `+${(userBet.points_earned ?? 0).toFixed(1)}pts` : userBet.status === 'lost' ? '✕' : '•'}
+            {userBet.status === 'won' ? `+${(userBet.points_earned ?? 0).toFixed(1)}pts` : userBet.status === 'lost' ? '+0.0pts' : '•'}
           </span>
         )}
 
