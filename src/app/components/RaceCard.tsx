@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import type { RaceWithRunners, RaceRunner } from '@/types'
 
 interface RaceCardProps {
@@ -54,7 +53,6 @@ export default function RaceCard({
   selectedRR = null,
   onSelect,
 }: RaceCardProps) {
-  const [error, setError] = useState<string | null>(null)
 
   const goldStages = ['Wildcard Match', 'Grand Finals']
   const rungStyle = (race.stage && goldStages.includes(race.stage))
@@ -77,8 +75,6 @@ export default function RaceCard({
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit',
   })
-
-const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
 
   return (
     <div style={{
@@ -191,7 +187,6 @@ const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
               onClick={() => {
                 if (disabled) return
                 onSelect?.(isSelected ? null : rr.id)
-                setError(null)
               }}
               style={{
                 padding: '7px 5px',
@@ -239,56 +234,6 @@ const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
         })}
       </div>
 
-      {/* Confirmation panel */}
-      {selectedRR && (
-        <div style={{
-          padding: '10px 12px',
-          borderTop: '0.5px solid var(--border)',
-          background: 'var(--navy2)',
-        }}>
-          {!loggedIn ? (
-            <div style={{ textAlign: 'center', padding: '4px 0' }}>
-              <div style={{ fontSize: '14px', color: 'var(--white)', fontWeight: 700, marginBottom: '4px' }}>Login to Predict</div>
-              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Sign in with Twitch to make predictions.</div>
-            </div>
-          ) : (
-            <>
-          <div style={{
-            fontSize: '12px', color: 'var(--muted)',
-            marginBottom: '8px', textAlign: 'center',
-          }}>
-            {existingPick
-              ? <>{`Change pick to `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` for `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
-              : <>{`Predict `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.runner?.username}</strong>{` wins for `}<strong style={{ color: 'var(--white)' }}>{selectedRunner?.odds}pts</strong>{` if correct`}</>
-            }
-          </div>
-
-          {error && (
-            <div style={{
-              fontSize: '11px', color: 'var(--red2)',
-              marginBottom: '8px', textAlign: 'center',
-            }}>
-              {error}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => { onSelect?.(null); setError(null) }}
-              style={{
-                padding: '9px 14px',
-                background: 'transparent', color: 'var(--muted)',
-                border: '0.5px solid var(--border)', borderRadius: '6px',
-                fontSize: '13px', cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-            </>
-          )}
-        </div>
-      )}
     </div>
   )
 }
