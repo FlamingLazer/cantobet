@@ -66,6 +66,7 @@ export default function AdminPanel() {
   const [newStage, setNewStage] = useState('')
 
   const stageOptions = [
+    'Wildcard Match',
     'Quarterfinal 1', 'Quarterfinal 2', 'Quarterfinal 3', 'Quarterfinal 4',
     'Semifinal 1', 'Semifinal 2',
     '3rd Place Match',
@@ -181,7 +182,7 @@ export default function AdminPanel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        week: newWeek,
+        week: newFormat === 3 ? newWeek : undefined,
         rung: newFormat === 3 ? newRung : undefined,
         scheduled_at: new Date(newTime).toISOString(),
         is_top8_qualifier: newFormat === 2 || newRung === 1,
@@ -437,21 +438,14 @@ export default function AdminPanel() {
                 </div>
               </>
             ) : (
-              <>
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Stage</div>
-                  <select value={newStage} onChange={e => setNewStage(e.target.value)}
-                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
-                    <option value="">Select stage</option>
-                    {stageOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Week</div>
-                  <input type="number" value={newWeek} min={1} onChange={e => setNewWeek(Number(e.target.value))}
-                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
-                </div>
-              </>
+              <div style={{ gridColumn: 'span 2' }}>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Stage</div>
+                <select value={newStage} onChange={e => setNewStage(e.target.value)}
+                  style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
+                  <option value="">Select stage</option>
+                  {stageOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
             )}
           </div>
 
