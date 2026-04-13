@@ -217,11 +217,11 @@ export default function RaceCard({
                 borderRadius: '5px',
                 border: `0.5px solid ${
                   isPicked ? 'var(--green)'
-                  : isSelected ? 'var(--red2)'
+                  : isSelected ? 'var(--accent)'
                   : 'var(--borderb)'
                 }`,
                 background: isPicked ? 'var(--green-bg)'
-                  : isSelected ? 'var(--red-bg)'
+                  : isSelected ? 'var(--navy4)'
                   : 'var(--navy2)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: '2px',
