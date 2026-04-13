@@ -54,7 +54,6 @@ export default function RaceCard({
   selectedRR = null,
   onSelect,
 }: RaceCardProps) {
-  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const goldStages = ['Wildcard Match', 'Grand Finals']
@@ -79,31 +78,7 @@ export default function RaceCard({
     hour: 'numeric', minute: '2-digit',
   })
 
-  async function confirmPick() {
-    if (!selectedRR || submitting) return
-    setSubmitting(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/bets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ race_runner_id: selectedRR }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error)
-      } else {
-        onPickPlaced(selectedRR, race.id)
-        onSelect?.(null)
-      }
-    } catch {
-      setError('Something went wrong')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
+const selectedRunner = race.race_runners.find(rr => rr.id === selectedRR)
 
   return (
     <div style={{
@@ -297,24 +272,7 @@ export default function RaceCard({
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={confirmPick}
-              disabled={submitting}
-              style={{
-                flex: 1, padding: '9px',
-                background: submitting ? 'var(--navy4)' : 'var(--accent)',
-                color: 'var(--bg)', border: 'none',
-                fontFamily: "'Rubik', sans-serif",
-                fontSize: '15px', fontWeight: 700,
-                letterSpacing: '2px', textTransform: 'uppercase',
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                borderRadius: '6px',
-                transition: 'background .2s',
-              }}
-            >
-              {submitting ? 'Confirming...' : existingPick ? 'Change Pick' : 'Confirm Pick'}
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={() => { onSelect?.(null); setError(null) }}
               style={{
