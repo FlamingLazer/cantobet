@@ -54,7 +54,10 @@ export default function RaceCard({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const rungStyle = rungColors[race.rung] ?? rungColors[7]
+  const goldStages = ['Wildcard Match', 'Grand Finals']
+  const rungStyle = (race.stage && goldStages.includes(race.stage))
+    ? rungColors[1]
+    : rungColors[race.rung] ?? rungColors[7]
   const isLocked = race.status === 'locked'
   const isPast = !race.manually_unlocked && new Date(race.scheduled_at) <= new Date()
   const existingPick = userPicks[race.id]
