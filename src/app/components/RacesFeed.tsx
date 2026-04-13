@@ -15,6 +15,9 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
   const [loading, setLoading] = useState(true)
   const [userPicks, setUserPicks] = useState<Record<string, string>>({})
   const [ladderPbs, setLadderPbs] = useState<Record<string, string>>({})
+  const [pendingSelections, setPendingSelections] = useState<Record<string, string>>({})
+  const [confirmingAll, setConfirmingAll] = useState(false)
+  const [confirmAllError, setConfirmAllError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -61,6 +64,43 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
     setUserPicks(prev => ({ ...prev, [raceId]: raceRunnerId }))
   }
 
+  function handleSelect(raceId: string, raceRunnerId: string | null) {
+    setPendingSelections(prev => {
+      const next = { ...prev }
+      if (raceRunnerId === null) {
+        delete next[raceId]
+      } else {
+        next[raceId] = raceRunnerId
+      }
+      return next
+    })
+  }
+
+  async function confirmAll() {
+    const entries = Object.entries(pendingSelections)
+    if (!entries.length) return
+    setConfirmingAll(true)
+    setConfirmAllError(null)
+
+    let failed = 0
+    for (const [raceId, raceRunnerId] of entries) {
+      const res = await fetch('/api/bets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ race_runner_id: raceRunnerId }),
+      })
+      if (res.ok) {
+        handlePickPlaced(raceRunnerId, raceId)
+      } else {
+        failed++
+      }
+    }
+
+    setPendingSelections({})
+    setConfirmingAll(false)
+    if (failed > 0) setConfirmAllError(`${failed} pick${failed > 1 ? 's' : ''} failed to save`)
+  }
+
   function sectionKey(race: RaceWithRunners): string {
     if (race.stage === 'Wildcard Match') return 'Wildcard Match'
     if (race.stage) return 'Top 8 Playoffs'
@@ -79,13 +119,14 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
     return acc
   }, {} as Record<string, RaceWithRunners[]>)
 
-  // Sort: regular weeks numerically first, then Wildcard Match, then Top 8 Playoffs
   const sectionOrder = (key: string) => {
     if (key === 'Wildcard Match') return 10000
     if (key === 'Top 8 Playoffs') return 10001
     return parseInt(key.replace('week_', ''))
   }
   const sections = Object.keys(bySection).sort((a, b) => sectionOrder(a) - sectionOrder(b))
+
+  const pendingCount = Object.keys(pendingSelections).length
 
   if (loading) {
     return (
@@ -105,7 +146,7 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
   }
 
   return (
-    <div>
+    <div style={{ paddingBottom: pendingCount > 0 ? '80px' : '0' }}>
       {!hideFormatBox && (
         <div style={{
           background: 'var(--navy3)',
@@ -158,12 +199,59 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
                 onRemoveFromSlip={() => {}}
                 loggedIn={loggedIn}
                 ladderPbs={ladderPbs}
+                selectedRR={pendingSelections[race.id] ?? null}
+                onSelect={(id) => handleSelect(race.id, id)}
               />
             ))}
           </div>
         )
       })}
 
+      {/* Sticky Confirm All bar */}
+      {pendingCount > 0 && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          background: 'rgba(8,11,16,0.97)',
+          borderTop: '0.5px solid var(--borderb)',
+          backdropFilter: 'blur(12px)',
+          padding: '12px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: '10px',
+          zIndex: 40,
+        }}>
+          {confirmAllError && (
+            <span style={{ fontSize: '12px', color: 'var(--red2)' }}>{confirmAllError}</span>
+          )}
+          <button
+            onClick={() => { setPendingSelections({}); setConfirmAllError(null) }}
+            style={{
+              padding: '9px 16px',
+              background: 'transparent', color: 'var(--muted)',
+              border: '0.5px solid var(--border)', borderRadius: '6px',
+              fontSize: '13px', cursor: 'pointer',
+            }}
+          >
+            Clear
+          </button>
+          <button
+            onClick={confirmAll}
+            disabled={confirmingAll}
+            style={{
+              padding: '9px 24px',
+              background: confirmingAll ? 'var(--navy4)' : 'var(--accent)',
+              color: 'var(--bg)', border: 'none',
+              fontFamily: "'Rubik', sans-serif",
+              fontSize: '15px', fontWeight: 700,
+              letterSpacing: '2px', textTransform: 'uppercase',
+              cursor: confirmingAll ? 'not-allowed' : 'pointer',
+              borderRadius: '6px',
+              transition: 'background .2s',
+            }}
+          >
+            {confirmingAll ? 'Confirming...' : `Confirm All (${pendingCount})`}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -12,6 +12,8 @@ interface RaceCardProps {
   onRemoveFromSlip: (id: string) => void
   loggedIn?: boolean
   ladderPbs?: Record<string, string>
+  selectedRR?: string | null
+  onSelect?: (id: string | null) => void
 }
 
 const rungColors: Record<number, { bg: string; color: string; border: string }> = {
@@ -49,8 +51,9 @@ export default function RaceCard({
   onRemoveFromSlip,
   loggedIn = false,
   ladderPbs = {},
+  selectedRR = null,
+  onSelect,
 }: RaceCardProps) {
-  const [selectedRR, setSelectedRR] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -91,7 +94,7 @@ export default function RaceCard({
         setError(data.error)
       } else {
         onPickPlaced(selectedRR, race.id)
-        setSelectedRR(null)
+        onSelect?.(null)
       }
     } catch {
       setError('Something went wrong')
@@ -212,7 +215,7 @@ export default function RaceCard({
               disabled={disabled}
               onClick={() => {
                 if (disabled) return
-                setSelectedRR(isSelected ? null : rr.id)
+                onSelect?.(isSelected ? null : rr.id)
                 setError(null)
               }}
               style={{
@@ -313,7 +316,7 @@ export default function RaceCard({
               {submitting ? 'Confirming...' : existingPick ? 'Change Pick' : 'Confirm Pick'}
             </button>
             <button
-              onClick={() => { setSelectedRR(null); setError(null) }}
+              onClick={() => { onSelect?.(null); setError(null) }}
               style={{
                 padding: '9px 14px',
                 background: 'transparent', color: 'var(--muted)',
