@@ -96,4 +96,14 @@ input, select, textarea {
     scrollbar-width: none;
   }
   .mobile-nav::-webkit-scrollbar { display: none; }
+
+  .mobile-points {
+    font-size: 11px !important;
+    padding: 4px 7px !important;
+  }
+
+  .mobile-username {
+    font-size: 11px !important;
+    padding: 4px 7px !important;
+  }
 }

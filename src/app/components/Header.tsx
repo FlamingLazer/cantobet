@@ -106,7 +106,7 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
           {!profileLoading && (
             user ? (
               <>
-                <div style={{
+                <div className="mobile-points" style={{
                   background: 'var(--gold-bg)',
                   border: '1px solid var(--gold-dim)',
                   borderRadius: '6px',
@@ -129,6 +129,7 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
 
                 <div
                   onClick={() => setProfileOpen(true)}
+                  className="mobile-username"
                   style={{
                     display: 'flex', alignItems: 'center', gap: '7px',
                     background: 'var(--navy3)',
