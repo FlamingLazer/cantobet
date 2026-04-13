@@ -61,13 +61,31 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
     setUserPicks(prev => ({ ...prev, [raceId]: raceRunnerId }))
   }
 
-  const byWeek = races.reduce((acc, race) => {
-    if (!acc[race.week]) acc[race.week] = []
-    acc[race.week].push(race)
-    return acc
-  }, {} as Record<number, RaceWithRunners[]>)
+  function sectionKey(race: RaceWithRunners): string {
+    if (race.stage === 'Wildcard Match') return 'Wildcard Match'
+    if (race.stage) return 'Top 8 Playoffs'
+    return `week_${race.week}`
+  }
 
-  const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b)
+  function sectionLabel(key: string): string {
+    if (key === 'Wildcard Match' || key === 'Top 8 Playoffs') return key
+    return `Week ${key.replace('week_', '')}`
+  }
+
+  const bySection = races.reduce((acc, race) => {
+    const key = sectionKey(race)
+    if (!acc[key]) acc[key] = []
+    acc[key].push(race)
+    return acc
+  }, {} as Record<string, RaceWithRunners[]>)
+
+  // Sort: regular weeks numerically first, then Wildcard Match, then Top 8 Playoffs
+  const sectionOrder = (key: string) => {
+    if (key === 'Wildcard Match') return 10000
+    if (key === 'Top 8 Playoffs') return 10001
+    return parseInt(key.replace('week_', ''))
+  }
+  const sections = Object.keys(bySection).sort((a, b) => sectionOrder(a) - sectionOrder(b))
 
   if (loading) {
     return (
@@ -110,11 +128,11 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
         </div>
       )}
 
-      {weeks.map(week => {
-        const weekRaces = byWeek[week]
+      {sections.map(key => {
+        const sectionRaces = bySection[key]
 
         return (
-          <div key={week} style={{ marginBottom: '20px' }}>
+          <div key={key} style={{ marginBottom: '20px' }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: '10px',
               marginBottom: '10px',
@@ -124,12 +142,12 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
                 fontSize: '17px', fontWeight: 800,
                 letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--white)',
               }}>
-                Week {week}
+                {sectionLabel(key)}
               </div>
               <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
             </div>
 
-            {weekRaces.map(race => (
+            {sectionRaces.map(race => (
               <RaceCard
                 key={race.id}
                 race={race}
@@ -145,6 +163,7 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
           </div>
         )
       })}
+
     </div>
   )
 }
