@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Predictions are closed for this race' }, { status: 409 })
     }
 
-    if (new Date(race.scheduled_at) <= new Date()) {
+    if (!race.manually_unlocked && new Date(race.scheduled_at) <= new Date()) {
       return NextResponse.json({ error: 'Race has already started' }, { status: 409 })
     }
 

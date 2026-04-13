@@ -262,6 +262,22 @@ export default function AdminPanel() {
     }
   }
 
+  async function lockRace(raceId: string) {
+    const res = await fetch(`/api/races/${raceId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'locked' }),
+    })
+    if (res.ok) {
+      showToast('Race locked — predictions closed')
+      fetchRaces()
+      fetchAudit()
+    } else {
+      const data = await res.json()
+      showToast(`Error: ${data.error}`)
+    }
+  }
+
   async function unlockRace(raceId: string) {
     const res = await fetch(`/api/races/${raceId}`, {
       method: 'PATCH',
@@ -495,6 +511,16 @@ export default function AdminPanel() {
                   }}>
                     {race.status.toUpperCase()}
                   </span>
+
+                  {/* Lock button — only for open races */}
+                  {race.status === 'open' && (
+                    <button
+                      onClick={() => lockRace(race.id)}
+                      style={{ padding: '5px 10px', background: 'var(--orange-bg)', color: 'var(--orange)', border: '0.5px solid var(--orange-border)', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Lock
+                    </button>
+                  )}
 
                   {/* Unlock button — only for locked races */}
                   {race.status === 'locked' && (

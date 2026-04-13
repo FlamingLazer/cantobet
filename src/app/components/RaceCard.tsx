@@ -56,7 +56,7 @@ export default function RaceCard({
 
   const rungStyle = rungColors[race.rung] ?? rungColors[7]
   const isLocked = race.status === 'locked'
-  const isPast = new Date(race.scheduled_at) <= new Date()
+  const isPast = !race.manually_unlocked && new Date(race.scheduled_at) <= new Date()
   const existingPick = userPicks[race.id]
 
   const eliminationRung = 8 - race.week

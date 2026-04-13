@@ -27,6 +27,7 @@ export interface Race {
   status: 'open' | 'locked' | 'settled'
   winner_runner_id: string | null
   is_top8_qualifier: boolean
+  manually_unlocked: boolean
 }
 
 export interface RaceRunner {
