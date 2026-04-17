@@ -4,6 +4,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Ladder League Predictions',
   description: 'Predictions Page for TCS Ladder League',
+  icons: { icon: '/ladder.svg' },
 }
 
 export default function RootLayout({
