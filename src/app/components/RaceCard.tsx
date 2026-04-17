@@ -185,7 +185,7 @@ export default function RaceCard({
               key={rr.id}
               disabled={disabled}
               onClick={() => {
-                if (disabled) return
+                if (disabled || !loggedIn) return
                 onSelect?.(isSelected ? null : rr.id)
               }}
               style={{
