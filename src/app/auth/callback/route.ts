@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase-server'
 
 export async function GET(req: NextRequest) {
-  const { searchParams, origin } = new URL(req.url)
+  const { searchParams, origin: rawOrigin } = new URL(req.url)
+  const forwardedHost = req.headers.get('x-forwarded-host')
+  const forwardedProto = req.headers.get('x-forwarded-proto') ?? 'https'
+  const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : rawOrigin
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 

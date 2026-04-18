@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { RaceWithRunners, RaceRunner } from '@/types'
 
 interface RaceCardProps {
@@ -53,6 +54,13 @@ export default function RaceCard({
   selectedRR = null,
   onSelect,
 }: RaceCardProps) {
+
+  const [showSignInMsg, setShowSignInMsg] = useState(false)
+
+  function promptSignIn() {
+    setShowSignInMsg(true)
+    setTimeout(() => setShowSignInMsg(false), 3000)
+  }
 
   const goldStages = ['Wildcard Match', 'Grand Finals']
   const rungStyle = (race.stage && goldStages.includes(race.stage))
@@ -185,7 +193,8 @@ export default function RaceCard({
               key={rr.id}
               disabled={disabled}
               onClick={() => {
-                if (disabled || !loggedIn) return
+                if (disabled) return
+                if (!loggedIn) { promptSignIn(); return }
                 onSelect?.(isSelected ? null : rr.id)
               }}
               style={{
@@ -233,6 +242,20 @@ export default function RaceCard({
           )
         })}
       </div>
+
+      {showSignInMsg && (
+        <div style={{
+          padding: '8px 12px',
+          borderTop: '0.5px solid var(--border)',
+          background: 'var(--navy4)',
+          textAlign: 'center',
+          fontSize: '13px',
+          color: 'var(--accent)',
+          fontWeight: 600,
+        }}>
+          Sign in with Twitch to make predictions
+        </div>
+      )}
 
     </div>
   )
