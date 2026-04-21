@@ -240,7 +240,7 @@ export default function Leaderboard() {
         {/* Header row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '40px 1fr 120px',
+          gridTemplateColumns: '40px 1fr 80px',
           gap: '8px',
           padding: '8px 16px',
           borderBottom: '0.5px solid var(--border)',
@@ -262,7 +262,7 @@ export default function Leaderboard() {
               key={entry.id}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '40px 1fr 120px',
+                gridTemplateColumns: '40px 1fr 80px',
                 gap: '8px',
                 padding: '10px 16px',
                 borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
@@ -288,11 +288,14 @@ export default function Leaderboard() {
                 {i + 1}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                 <span style={{
                   fontFamily: "'Montserrat', sans-serif",
                   fontSize: '14px', fontWeight: 600,
                   letterSpacing: '.2px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}>
                   {entry.twitch_username}
                 </span>
