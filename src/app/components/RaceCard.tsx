@@ -101,7 +101,7 @@ export default function RaceCard({
         borderBottom: '0.5px solid var(--border)',
         background: 'var(--navy4)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{
             fontSize: '12px', fontWeight: 800,
             padding: '2px 8px', borderRadius: '3px',
@@ -109,15 +109,9 @@ export default function RaceCard({
             background: rungStyle.bg,
             color: rungStyle.color,
             border: `1px solid ${rungStyle.border}`,
-            flexShrink: 0,
           }}>
             {race.stage ?? `Rung ${race.rung}`}
           </span>
-          {!race.stage && (
-            <span style={{ fontSize: '12px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {rungNote}
-            </span>
-          )}
         </div>
 
         {isLocked || isPast ? (
