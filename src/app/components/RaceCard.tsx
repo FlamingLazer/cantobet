@@ -159,9 +159,11 @@ export default function RaceCard({
               <span style={{ width: '55px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
                 {rr.runner?.seed != null ? `Seed ${rr.runner.seed}` : ''}
               </span>
-              <span style={{ width: '140px', textAlign: 'left', fontSize: '11px', color: 'var(--muted)' }}>
-                {rr.runner?.id && ladderPbs[rr.runner.id] ? `Ladder PB: ${formatPB(ladderPbs[rr.runner.id])}` : ''}
-              </span>
+              {Object.keys(ladderPbs).length > 0 && (
+                <span style={{ width: '140px', textAlign: 'left', fontSize: '11px', color: 'var(--muted)' }}>
+                  {rr.runner?.id && ladderPbs[rr.runner.id] ? `Ladder PB: ${formatPB(ladderPbs[rr.runner.id])}` : ''}
+                </span>
+              )}
               <span style={{ width: '90px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
                 {rr.runner?.pb ? `PB: ${formatPB(rr.runner.pb)}` : ''}
               </span>

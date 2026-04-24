@@ -6,11 +6,10 @@ import RaceCard from './RaceCard'
 import type { RaceWithRunners } from '@/types'
 
 interface RacesFeedProps {
-  hideFormatBox?: boolean
   loggedIn?: boolean
 }
 
-export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: RacesFeedProps) {
+export default function RacesFeed({ loggedIn = false }: RacesFeedProps) {
   const [races, setRaces] = useState<RaceWithRunners[]>([])
   const [loading, setLoading] = useState(true)
   const [userPicks, setUserPicks] = useState<Record<string, string>>({})
@@ -147,28 +146,6 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
 
   return (
     <div style={{ paddingBottom: pendingCount > 0 ? '80px' : '0' }}>
-      {!hideFormatBox && (
-        <div style={{
-          background: 'var(--navy3)',
-          border: '0.5px solid var(--borderb)',
-          borderRadius: '7px',
-          padding: '9px 12px',
-          marginBottom: '14px',
-        }}>
-          <div style={{
-            fontSize: '14px', fontWeight: 700, color: 'var(--white)',
-            marginBottom: '3px',
-            fontFamily: "'Montserrat', sans-serif",
-            letterSpacing: '.5px', textTransform: 'uppercase',
-          }}>
-            1v1v1 · Ladder League
-          </div>
-          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
-            3 runners race simultaneously — fastest time wins. Predict the winner of each race to earn points.
-          </div>
-        </div>
-      )}
-
       {sections.map(key => {
         const sectionRaces = bySection[key]
 
@@ -198,7 +175,7 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
                 onAddToSlip={() => {}}
                 onRemoveFromSlip={() => {}}
                 loggedIn={loggedIn}
-                ladderPbs={ladderPbs}
+                ladderPbs={key === 'week_1' ? {} : ladderPbs}
                 selectedRR={pendingSelections[race.id] ?? null}
                 onSelect={(id) => handleSelect(race.id, id)}
               />
@@ -248,7 +225,7 @@ export default function RacesFeed({ hideFormatBox = false, loggedIn = false }: R
               transition: 'background .2s',
             }}
           >
-            {confirmingAll ? 'Confirming...' : `Confirm All (${pendingCount})`}
+            {confirmingAll ? 'Confirming...' : pendingCount === 1 ? 'Confirm' : `Confirm All (${pendingCount})`}
           </button>
         </div>
       )}

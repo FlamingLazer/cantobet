@@ -83,14 +83,16 @@ export default function Header({ points, onPointsUpdate, isAdmin, onAdminChange 
       <header style={{
         background: 'rgba(8,11,16,.92)',
         backdropFilter: 'blur(12px)',
-        padding: '0 20px',
+        padding: '0 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: '52px',
+        height: '64px',
         position: 'relative',
       }}>
-        <img src="/logo.png" alt="Logo" style={{ height: '52px', width: 'auto' }} />
+        <a href="https://ladderleague.run" target="_blank" rel="noopener noreferrer">
+          <img src="/logo.png" alt="Logo" style={{ height: '52px', width: 'auto', display: 'block' }} />
+        </a>
 
         <div className="mobile-hide" style={{
           position: 'absolute', left: '50%', transform: 'translateX(-50%)',
