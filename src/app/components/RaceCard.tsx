@@ -66,8 +66,9 @@ export default function RaceCard({
   const rungStyle = (race.stage && goldStages.includes(race.stage))
     ? rungColors[1]
     : rungColors[race.rung] ?? rungColors[7]
+  const isTBD = race.scheduled_at?.startsWith('9999')
   const isLocked = race.status === 'locked'
-  const isPast = !race.manually_unlocked && new Date(race.scheduled_at) <= new Date()
+  const isPast = !race.manually_unlocked && !isTBD && new Date(race.scheduled_at) <= new Date()
   const existingPick = userPicks[race.id]
 
   const eliminationRung = 8 - race.week
@@ -79,7 +80,7 @@ export default function RaceCard({
     ? '2nd & 3rd eliminated'
     : ''
 
-  const scheduledTime = new Date(race.scheduled_at).toLocaleString('en-US', {
+  const scheduledTime = isTBD ? 'TBD' : new Date(race.scheduled_at).toLocaleString('en-US', {
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit',
   })

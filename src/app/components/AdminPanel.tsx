@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+const TBD_SENTINEL = '9999-12-31T23:59:59.000Z'
+const isTBD = (s: string) => s?.startsWith('9999')
 import { createClient } from '@/lib/supabase'
 import ProfileModal from './ProfileModal'
 
@@ -62,8 +65,10 @@ export default function AdminPanel() {
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
   const [newTime, setNewTime] = useState('')
+  const [newTBD, setNewTBD] = useState(false)
   const [newFormat, setNewFormat] = useState<2 | 3>(3)
   const [newStage, setNewStage] = useState('')
+  const [editTBD, setEditTBD] = useState(false)
 
   const stageOptions = [
     'Wildcard Match',
@@ -101,7 +106,7 @@ export default function AdminPanel() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        scheduled_at: editTime ? new Date(editTime).toISOString() : undefined,
+        scheduled_at: editTBD ? TBD_SENTINEL : editTime ? new Date(editTime).toISOString() : undefined,
         odds: editOdds,
       }),
     })
@@ -175,7 +180,7 @@ export default function AdminPanel() {
   }
 
   async function createRace() {
-    if (!newTime || newRunners.some(r => !r.runner_id)) return
+    if ((!newTBD && !newTime) || newRunners.some(r => !r.runner_id)) return
     if (newFormat === 2 && !newStage) { showToast('Select a stage'); return }
     setCreating(true)
     const res = await fetch('/api/races', {
@@ -184,7 +189,7 @@ export default function AdminPanel() {
       body: JSON.stringify({
         week: newFormat === 3 ? newWeek : undefined,
         rung: newFormat === 3 ? newRung : undefined,
-        scheduled_at: new Date(newTime).toISOString(),
+        scheduled_at: newTBD ? TBD_SENTINEL : new Date(newTime).toISOString(),
         is_top8_qualifier: newFormat === 2 || newRung === 1,
         stage: newFormat === 2 ? newStage : undefined,
         runners: newRunners.map(r => ({
@@ -197,6 +202,7 @@ export default function AdminPanel() {
       showToast('Race created!')
       fetchRaces()
       setNewTime('')
+      setNewTBD(false)
       setNewStage('')
       setNewRunners(Array.from({ length: newFormat }, () => ({ runner_id: '', odds: '' })))
     } else {
@@ -450,9 +456,16 @@ export default function AdminPanel() {
           </div>
 
           <div style={{ marginBottom: '10px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Scheduled time</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Scheduled time</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--muted)', cursor: 'pointer' }}>
+                <input type="checkbox" checked={newTBD} onChange={e => setNewTBD(e.target.checked)} />
+                TBD
+              </label>
+            </div>
             <input type="datetime-local" value={newTime} onChange={e => setNewTime(e.target.value)}
-              style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
+              disabled={newTBD}
+              style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: newTBD ? 'var(--dim)' : 'var(--white)', fontSize: '13px', outline: 'none', opacity: newTBD ? 0.4 : 1 }} />
           </div>
 
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px', fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>
@@ -589,7 +602,7 @@ export default function AdminPanel() {
                   {/* Edit button */}
                   {editRaceId === race.id ? (
                     <button
-                      onClick={() => { setEditRaceId(null); setEditTime(''); setEditOdds({}) }}
+                      onClick={() => { setEditRaceId(null); setEditTime(''); setEditTBD(false); setEditOdds({}) }}
                       style={{ padding: '5px 10px', background: 'transparent', color: 'var(--muted)', border: '0.5px solid var(--border)', borderRadius: '5px', fontSize: '12px', cursor: 'pointer' }}
                     >
                       Cancel
@@ -599,9 +612,15 @@ export default function AdminPanel() {
                       onClick={() => {
                         setEditRaceId(race.id)
                         setSettleRaceId(null)
-                        const scheduledDate = new Date(race.scheduled_at)
-                        scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset())
-                        setEditTime(scheduledDate.toISOString().slice(0, 16))
+                        if (isTBD(race.scheduled_at)) {
+                          setEditTBD(true)
+                          setEditTime('')
+                        } else {
+                          setEditTBD(false)
+                          const scheduledDate = new Date(race.scheduled_at)
+                          scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset())
+                          setEditTime(scheduledDate.toISOString().slice(0, 16))
+                        }
                         const initialOdds: Record<string, string> = {}
                         race.race_runners.forEach(rr => {
                           initialOdds[rr.id] = rr.odds?.toString() ?? ''
@@ -672,12 +691,19 @@ export default function AdminPanel() {
               {editRaceId === race.id && (
                 <div style={{ paddingTop: '10px', borderTop: '0.5px solid var(--border)' }}>
                   <div style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Scheduled time</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Scheduled time</div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--muted)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={editTBD} onChange={e => setEditTBD(e.target.checked)} />
+                        TBD
+                      </label>
+                    </div>
                     <input
                       type="datetime-local"
                       value={editTime}
                       onChange={e => setEditTime(e.target.value)}
-                      style={{ width: '100%', background: 'var(--navy2)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '6px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                      disabled={editTBD}
+                      style={{ width: '100%', background: 'var(--navy2)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '6px 10px', color: editTBD ? 'var(--dim)' : 'var(--white)', fontSize: '13px', outline: 'none', opacity: editTBD ? 0.4 : 1 }}
                     />
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px', fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>
