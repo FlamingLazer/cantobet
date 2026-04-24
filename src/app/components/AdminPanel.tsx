@@ -18,6 +18,7 @@ interface RaceRow {
   id: string
   week: number
   rung: number
+  stage: string | null
   scheduled_at: string
   status: 'open' | 'locked' | 'settled'
   race_runners: {
@@ -136,7 +137,7 @@ export default function AdminPanel() {
     const { data } = await supabase
       .from('races')
       .select(`
-        id, week, rung, scheduled_at, status,
+        id, week, rung, stage, scheduled_at, status,
         race_runners(id, odds, finish_position, runner:runners(username))
       `)
       .neq('status', 'settled')
@@ -148,7 +149,7 @@ export default function AdminPanel() {
     const { data } = await supabase
       .from('races')
       .select(`
-        id, week, rung, scheduled_at, status,
+        id, week, rung, stage, scheduled_at, status,
         race_runners(id, odds, finish_position, runner:runners(username))
       `)
       .eq('status', 'settled')
@@ -545,7 +546,7 @@ export default function AdminPanel() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (settleRaceId === race.id || editRaceId === race.id) ? '10px' : '0' }}>
                 <div>
                   <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800 }}>
-                    W{race.week} · Rung {race.rung}
+                    {race.stage ?? `W${race.week} · Rung ${race.rung}`}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
                     {race.race_runners.map(rr => rr.runner?.username).join(' · ')}
@@ -765,7 +766,7 @@ export default function AdminPanel() {
                 }}>
                   <div>
                     <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800 }}>
-                      W{race.week} · Rung {race.rung}
+                      {race.stage ?? `W${race.week} · Rung ${race.rung}`}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
                       {race.race_runners.map(rr => rr.runner?.username).join(' · ')}
