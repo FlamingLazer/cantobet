@@ -84,6 +84,7 @@ export default function AdminPanel() {
     { runner_id: '', odds: '' },
   ])
   const [creating, setCreating] = useState(false)
+  const [seedingRunners, setSeedingRunners] = useState(false)
 
   const [adjUsername, setAdjUsername] = useState('')
   const [adjAmount, setAdjAmount] = useState('')

@@ -71,6 +71,13 @@ export async function POST(req: NextRequest) {
           reason: 'admin_adjustment',
           ref_id: bet.id,
         })
+        // Reverse points earned
+        if (bet.points_earned) {
+          await service.rpc('credit_points', {
+            p_user_id: bet.user_id,
+            p_points: -bet.points_earned,
+          })
+        }
       } else if (bet.status === 'lost') {
         // Refund the wager
         await mutateStuds({

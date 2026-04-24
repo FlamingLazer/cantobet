@@ -3,34 +3,36 @@ export interface Participant {
   seed: number
   country: string
   username?: string
-  lcq?: boolean
 }
 
 export const season3: Participant[] = [
-  { name: 'ZacMuffin',    seed: 1,  country: 'US', username: 'Zacc' },
-  { name: 'Dragon67',     seed: 2,  country: 'FI' },
-  { name: 'AnorakDT',     seed: 3,  country: 'US' },
-  { name: 'itsjared97',   seed: 4,  country: 'US' },
-  { name: 'ERoadhouse',   seed: 5,  country: 'US' },
-  { name: 'Bricko',       seed: 6,  country: 'US' },
-  { name: 'WiiSuper',     seed: 7,  country: 'US' },
-  { name: 'Scynor',       seed: 8,  country: 'US' },
-  { name: 'Wazzip',       seed: 9,  country: 'US' },
-  { name: 'FlamingLazer', seed: 10, country: 'CA' },
-  { name: 'Dimei',        seed: 11, country: 'US' },
-  { name: 'Colten',       seed: 12, country: 'US', username: 'colten8' },
-  { name: 'TheCrazedCap', seed: 13, country: 'US' },
-  { name: 'kwazrr',       seed: 14, country: 'BE' },
-  { name: 'ejpman',       seed: 15, country: 'US' },
-  { name: 'Charzight',    seed: 16, country: 'US', lcq: true },
-  { name: 'Coolisen',     seed: 17, country: 'SE', username: 'Coolisengaming2', lcq: true },
-  { name: 'MelloVro',     seed: 18, country: 'US', lcq: true },
-  { name: 'ChessWiz',     seed: 19, country: 'US', lcq: true },
-  { name: 'Gamer_Olive',  seed: 20, country: 'AU', username: 'Gamer_Olive666', lcq: true },
-  { name: 'CaptainPaxo',  seed: 21, country: 'UK', lcq: true },
-  { name: 'Chroma_Q',     seed: 22, country: 'US', lcq: true },
-  { name: 'Nolan',        seed: 23, country: 'US', username: 'Nolan_', lcq: true },
-  { name: 'skunkmonke',   seed: 24, country: 'US', lcq: true },
+  { name: 'ZacMuffin',     seed: 1,  country: 'US', username: 'Zacc' },
+  { name: 'Dragon76',      seed: 2,  country: 'FI', username: 'Dragon67' },
+  { name: 'ERoadhouse',    seed: 3,  country: 'US' },
+  { name: 'Bricko',        seed: 4,  country: 'US' },
+  { name: 'AnorakDT',      seed: 5,  country: 'US' },
+  { name: 'itsjared97',    seed: 6,  country: 'US' },
+  { name: 'Scynor',        seed: 7,  country: 'US' },
+  { name: 'WiiSuper',      seed: 8,  country: 'US' },
+  { name: 'Wazzip',        seed: 9,  country: 'US' },
+  { name: 'FlamingLazer',  seed: 10, country: 'CA' },
+  { name: 'Dimei',         seed: 11, country: 'US' },
+  { name: 'kwazrr',        seed: 12, country: 'BE' },
+  { name: 'Colten',        seed: 13, country: 'US', username: 'colten8' },
+  { name: 'GildetPhantom', seed: 14, country: 'DE' },
+  { name: 'ejpman',        seed: 15, country: 'US' },
+  { name: 'Charzight',     seed: 16, country: 'US' },
+  { name: 'Coolisen',      seed: 17, country: 'SE', username: 'Coolisengaming2' },
+  { name: 'MelloVro',      seed: 18, country: 'US' },
+  { name: 'thenzota',      seed: 19, country: 'NZ' },
+  { name: 'Gamer_Olive',   seed: 20, country: 'AU', username: 'Gamer_Olive666' },
+  { name: 'ChessWiz',      seed: 21, country: 'US' },
+  { name: 'AppleMan',      seed: 22, country: 'AU', username: 'The_AppleMan' },
+  { name: 'CaptainPaxo',   seed: 23, country: 'UK' },
+  { name: 'Wytew',         seed: 24, country: 'GB-WLS' },
+  { name: 'doubtt',        seed: 25, country: 'US', username: '_doubtt' },
+  { name: 'Nolan',         seed: 26, country: 'US', username: 'Nolan_' },
+  { name: 'Chroma_Q',      seed: 27, country: 'US' },
 ]
 
 export const season2: Participant[] = [
@@ -63,7 +65,7 @@ export const season2: Participant[] = [
 ]
 
 export function getSeed(runnerName: string): number | null {
-  const p = season2.find(
+  const p = season3.find(
     p => p.name.toLowerCase() === runnerName.toLowerCase() ||
          p.username?.toLowerCase() === runnerName.toLowerCase()
   )

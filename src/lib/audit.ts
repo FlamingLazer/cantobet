@@ -14,6 +14,7 @@ interface AuditParams {
     | 'race_locked'
     | 'race_unlocked'
     | 'pbs_synced'
+    | 'runners_seeded'
   description: string
   metadata?: Record<string, unknown>
 }
