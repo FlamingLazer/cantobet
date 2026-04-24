@@ -13,6 +13,7 @@ interface AuditParams {
     | 'futures_odds_updated'
     | 'race_locked'
     | 'race_unlocked'
+    | 'pbs_synced'
   description: string
   metadata?: Record<string, unknown>
 }
