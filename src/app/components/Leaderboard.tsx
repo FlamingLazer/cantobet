@@ -21,6 +21,20 @@ interface UserHistory {
   }
 }
 
+interface FuturesPick {
+  id: string
+  runner_id: string
+  direction: 'over' | 'under'
+  is_correct: boolean | null
+  points_earned: number | null
+  line?: {
+    line: number
+    final_position: number | null
+    settled_at: string | null
+    runner?: { username: string }
+  } | null
+}
+
 function Flag({ code }: { code?: string | null }) {
   if (!code) return null
   return (
@@ -42,6 +56,8 @@ function UserHistoryModal({
   onClose: () => void
 }) {
   const [history, setHistory] = useState<UserHistory[]>([])
+  const [futurePicks, setFuturePicks] = useState<FuturesPick[]>([])
+  const [stats, setStats] = useState<{ race_points: number; futures_points: number; futures_correct: number; futures_settled: number; futures_total: number; futures_locked: boolean } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -50,16 +66,19 @@ function UserHistoryModal({
       .then(d => {
         const settled = (d.bets ?? []).filter((b: UserHistory) => b.status !== 'pending')
         setHistory(settled)
+        setFuturePicks(d.futures_picks ?? [])
+        setStats(d.stats)
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [userId])
 
-  const totalPoints = history
-    .filter(h => h.status === 'won')
-    .reduce((sum, h) => sum + (h.points_earned ?? 0), 0)
   const correct = history.filter(h => h.status === 'won').length
-  const accuracy = history.length > 0 ? Math.round((correct / history.length) * 100) : 0
+  const racePts = stats?.race_points ?? 0
+  const futuresPts = stats?.futures_points ?? 0
+  const futuresLocked = stats?.futures_locked ?? false
+  const futuresCorrect = stats?.futures_correct ?? 0
+  const futuresTotal = stats?.futures_total ?? 0
 
   return (
     <div
@@ -116,25 +135,29 @@ function UserHistoryModal({
           ) : (
             <>
               {/* Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
-                  { val: totalPoints.toFixed(1), label: 'Total points', color: 'var(--gold)' },
-                  { val: `${correct}/${history.length}`, label: 'Correct', color: 'var(--green)' },
-                  { val: `${accuracy}%`, label: 'Accuracy', color: 'var(--blue)' },
+                  { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
+                  { val: futuresLocked ? futuresPts.toFixed(1) : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: `${correct}/${history.length}`, label: 'Race picks', color: 'var(--green)' },
+                  { val: futuresLocked ? `${futuresCorrect}/${stats?.futures_settled ?? 0}` : '—', label: 'Futures picks', color: 'var(--green)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
                     borderRadius: '6px', padding: '9px', textAlign: 'center',
                   }}>
-                    <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '20px', fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '18px', fontWeight: 800, color: s.color }}>{s.val}</div>
                     <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '.5px' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
-              {/* History */}
+              {/* Race history */}
+              <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '12px 0 6px' }}>
+                Race Picks
+              </div>
               {history.length === 0 && (
-                <div style={{ textAlign: 'center', color: 'var(--dim)', padding: '20px', fontSize: '12px' }}>
+                <div style={{ textAlign: 'center', color: 'var(--dim)', padding: '16px', fontSize: '12px' }}>
                   No settled predictions yet.
                 </div>
               )}
@@ -145,16 +168,10 @@ function UserHistoryModal({
                 return (
                   <div key={h.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '7px 0',
-                    borderBottom: '0.5px solid var(--border)',
-                    fontSize: '12px',
+                    padding: '7px 0', borderBottom: '0.5px solid var(--border)', fontSize: '12px',
                   }}>
                     <div>
-                      <div style={{
-                        fontFamily: "'Montserrat', sans-serif",
-                        fontSize: '13px', fontWeight: 700,
-                        display: 'flex', alignItems: 'center', gap: '4px',
-                      }}>
+                      <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Flag code={runner?.country_code} />
                         {runner?.username ?? '—'} wins
                       </div>
@@ -163,19 +180,60 @@ function UserHistoryModal({
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{
-                        fontSize: '13px', fontWeight: 700,
-                        color: won ? 'var(--green)' : 'var(--red2)',
-                      }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: won ? 'var(--green)' : 'var(--red2)' }}>
                         {won ? `+${(h.points_earned ?? 0).toFixed(1)}pts` : '+0.0pts'}
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
-                        {won ? 'correct' : 'incorrect'}
-                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--dim)' }}>{won ? 'correct' : 'incorrect'}</div>
                     </div>
                   </div>
                 )
               })}
+
+              {/* Futures picks */}
+              {futuresLocked && futurePicks.length > 0 && (
+                <>
+                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '14px 0 6px' }}>
+                    Ladder Futures
+                  </div>
+                  {futurePicks.map(fp => {
+                    const won = fp.is_correct === true
+                    const lost = fp.is_correct === false
+                    return (
+                      <div key={fp.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '7px 0', borderBottom: '0.5px solid var(--border)', fontSize: '12px',
+                      }}>
+                        <div>
+                          <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            {fp.line?.runner?.username ?? '—'}
+                            <span style={{
+                              fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px',
+                              background: fp.direction === 'over' ? 'var(--blue-bg)' : 'var(--orange-bg)',
+                              color: fp.direction === 'over' ? 'var(--blue)' : 'var(--orange)',
+                              border: `1px solid ${fp.direction === 'over' ? 'var(--blue-border)' : 'var(--orange-border)'}`,
+                            }}>
+                              {fp.direction.toUpperCase()}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+                            O/U {fp.line?.line}
+                            {fp.line?.final_position && <span style={{ marginLeft: '4px' }}>· finished {fp.line.final_position}</span>}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          {!fp.line?.settled_at && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '3px', background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue-border)' }}>
+                              PENDING
+                            </span>
+                          )}
+                          {won && <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--green)' }}>+{(fp.points_earned ?? 0).toFixed(1)}pts</div>}
+                          {lost && <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--red2)' }}>+0.0pts</div>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
             </>
           )}
         </div>

@@ -40,26 +40,31 @@ export async function GET(
   const [
     { data: userData },
     { data: bets },
-    { data: futurePicks },
+    { data: rawFuturePicks },
+    { data: futuresLines },
     { data: futuresConfig },
   ] = await Promise.all([
     service.from('users').select('*').eq('id', id).single(),
     betsQuery,
-    service
-      .from('ladder_futures_picks')
-      .select(`
-        id, runner_id, direction, is_correct, points_earned,
-        line:ladder_futures_lines(line, final_position, settled_at,
-          runner:runners(username)
-        )
-      `)
-      .eq('user_id', id),
+    service.from('ladder_futures_picks').select('id, runner_id, direction, is_correct, points_earned').eq('user_id', id),
+    service.from('ladder_futures_lines').select('runner_id, line, final_position, settled_at, runner:runners(username, seed)'),
     service.from('ladder_futures_config').select('is_locked').single(),
   ])
 
   const futuresLocked = futuresConfig?.is_locked ?? false
-  // Show futures picks to anyone once locked (can't copy after lock), otherwise own/admin only
-  const visibleFuturePicks = (futurePicks ?? []).filter(() => futuresLocked || canSeeAll)
+  const lineMap = Object.fromEntries((futuresLines ?? []).map((l: { runner_id: string }) => [l.runner_id, l]))
+
+  const futurePicks = (futuresLocked || canSeeAll)
+    ? (rawFuturePicks ?? [])
+        .map((p: { runner_id: string }) => ({ ...p, line: lineMap[p.runner_id] ?? null }))
+        .sort((a: { line?: { runner?: { seed?: number | null } } | null }, b: { line?: { runner?: { seed?: number | null } } | null }) => {
+          const sa = a.line?.runner?.seed ?? 999
+          const sb = b.line?.runner?.seed ?? 999
+          return sa - sb
+        })
+    : []
+
+  const visibleFuturePicks = futurePicks
 
   const settledBets = bets?.filter((b: { status: string }) => b.status !== 'pending') ?? []
   const correctBets = settledBets.filter((b: { status: string }) => b.status === 'won')

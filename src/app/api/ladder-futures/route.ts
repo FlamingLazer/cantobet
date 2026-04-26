@@ -13,7 +13,11 @@ export async function GET(_req: NextRequest) {
   ])
 
   const config = configRes.data ?? { is_locked: false, points_per_correct_pick: 100 }
-  const lines = linesRes.data ?? []
+  const lines = (linesRes.data ?? []).sort((a: { runner: { seed: number | null } }, b: { runner: { seed: number | null } }) => {
+    const sa = a.runner?.seed ?? 999
+    const sb = b.runner?.seed ?? 999
+    return sa - sb
+  })
 
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()

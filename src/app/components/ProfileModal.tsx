@@ -155,9 +155,9 @@ export default function ProfileModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
                   { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
-                  { val: futuresLocked ? (futuresPts > 0 ? `+${futuresPts}` : '0') : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: futuresLocked ? futuresPts.toFixed(1) : '—', label: 'Futures pts', color: 'var(--gold)' },
                   { val: `${correctPicks.length}/${settledPicks.length}`, label: 'Race picks', color: 'var(--green)' },
-                  { val: futuresLocked ? `${futuresCorrect}/${futuresTotal}` : '—', label: 'Futures picks', color: 'var(--green)' },
+                  { val: futuresLocked ? `${futuresCorrect}/${futuresSettled}` : '—', label: 'Futures picks', color: 'var(--green)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
@@ -274,7 +274,7 @@ export default function ProfileModal({
                               fontSize: '14px', fontWeight: 700,
                               color: correct ? 'var(--green)' : incorrect ? 'var(--red2)' : 'var(--muted)',
                             }}>
-                              {correct ? `+${fp.points_earned ?? 0}` : incorrect ? '+0' : '—'}
+                              {correct ? `+${(fp.points_earned ?? 0).toFixed(1)}pts` : incorrect ? '+0.0pts' : '—'}
                             </div>
                           </div>
                         )
