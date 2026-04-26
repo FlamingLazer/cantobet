@@ -37,29 +37,29 @@ export async function GET(
     betsQuery.neq('status', 'pending')
   }
 
-  const futuresQuery = service
-    .from('ladder_futures_picks')
-    .select(`
-      id, runner_id, direction, is_correct, points_earned,
-      line:ladder_futures_lines(line, final_position, settled_at,
-        runner:runners(username)
-      )
-    `)
-    .eq('user_id', id)
-
-  if (!canSeeAll) {
-    futuresQuery.not('line.settled_at', 'is', null)
-  }
-
   const [
     { data: userData },
     { data: bets },
     { data: futurePicks },
+    { data: futuresConfig },
   ] = await Promise.all([
     service.from('users').select('*').eq('id', id).single(),
     betsQuery,
-    futuresQuery,
+    service
+      .from('ladder_futures_picks')
+      .select(`
+        id, runner_id, direction, is_correct, points_earned,
+        line:ladder_futures_lines(line, final_position, settled_at,
+          runner:runners(username)
+        )
+      `)
+      .eq('user_id', id),
+    service.from('ladder_futures_config').select('is_locked').single(),
   ])
+
+  const futuresLocked = futuresConfig?.is_locked ?? false
+  // Show futures picks to anyone once locked (can't copy after lock), otherwise own/admin only
+  const visibleFuturePicks = (futurePicks ?? []).filter(() => futuresLocked || canSeeAll)
 
   const settledBets = bets?.filter((b: { status: string }) => b.status !== 'pending') ?? []
   const correctBets = settledBets.filter((b: { status: string }) => b.status === 'won')
@@ -68,7 +68,7 @@ export async function GET(
     ? Math.round((correctBets.length / settledBets.length) * 100)
     : 0
 
-  const settledFutures = (futurePicks ?? []).filter((p: { line?: { settled_at?: string | null } | null }) => p.line?.settled_at)
+  const settledFutures = visibleFuturePicks.filter((p: { line?: { settled_at?: string | null } | null }) => p.line?.settled_at)
   const correctFutures = settledFutures.filter((p: { is_correct?: boolean | null }) => p.is_correct === true)
   const futuresPts = correctFutures.reduce((sum: number, p: { points_earned?: number | null }) => sum + (p.points_earned ?? 0), 0)
 
@@ -82,10 +82,12 @@ export async function GET(
       race_points: totalPoints,
       futures_points: futuresPts,
       futures_correct: correctFutures.length,
-      futures_total: settledFutures.length,
+      futures_settled: settledFutures.length,
+      futures_total: visibleFuturePicks.length,
+      futures_locked: futuresLocked,
     },
     bets: bets ?? [],
-    futures_picks: futurePicks ?? [],
+    futures_picks: visibleFuturePicks,
     watch_sessions: [],
   })
 }

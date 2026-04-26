@@ -37,7 +37,9 @@ interface ProfileData {
     race_points: number
     futures_points: number
     futures_correct: number
+    futures_settled: number
     futures_total: number
+    futures_locked: boolean
   }
   bets: Pick[]
   futures_picks: FuturesPick[]
@@ -83,11 +85,12 @@ export default function ProfileModal({
   const futurePicks = data?.futures_picks ?? []
   const settledPicks = picks.filter(p => p.status !== 'pending')
   const correctPicks = settledPicks.filter(p => p.status === 'won')
-  const accuracy = settledPicks.length > 0
-    ? Math.round((correctPicks.length / settledPicks.length) * 100)
-    : 0
   const racePts = data?.stats.race_points ?? 0
   const futuresPts = data?.stats.futures_points ?? 0
+  const futuresLocked = data?.stats.futures_locked ?? false
+  const futuresTotal = data?.stats.futures_total ?? 0
+  const futuresCorrect = data?.stats.futures_correct ?? 0
+  const futuresSettled = data?.stats.futures_settled ?? 0
 
   return (
     <div
@@ -152,9 +155,9 @@ export default function ProfileModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
                   { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
-                  { val: futuresPts > 0 ? `+${futuresPts}` : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: futuresLocked ? (futuresPts > 0 ? `+${futuresPts}` : '0') : '—', label: 'Futures pts', color: 'var(--gold)' },
                   { val: `${correctPicks.length}/${settledPicks.length}`, label: 'Race picks', color: 'var(--green)' },
-                  { val: `${accuracy}%`, label: 'Race accuracy', color: 'var(--blue)' },
+                  { val: futuresLocked ? `${futuresCorrect}/${futuresTotal}` : '—', label: 'Futures picks', color: 'var(--green)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
@@ -224,7 +227,7 @@ export default function ProfileModal({
               </div>
 
               {/* Futures picks */}
-              {futurePicks.length > 0 && (
+              {futuresLocked && futurePicks.length > 0 && (
                 <>
                   <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '12px 0 6px' }}>
                     Ladder Futures

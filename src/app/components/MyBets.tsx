@@ -92,9 +92,9 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
         gap: '8px', marginBottom: '16px',
       }}>
         {[
-          { val: totalPoints.toFixed(1), label: 'Total points', color: 'var(--gold)' },
+          { val: totalPoints.toFixed(1), label: 'Total race points', color: 'var(--gold)' },
           { val: `${correctPicks}/${settledPicks.length}`, label: 'Correct picks', color: 'var(--green)' },
-          { val: `${accuracy}%`, label: 'Accuracy', color: 'var(--blue)' },
+          { val: `${accuracy}%`, label: 'Race accuracy', color: 'var(--blue)' },
         ].map((s, i) => (
           <div key={i} style={{
             background: 'var(--navy2)', border: '0.5px solid var(--border)',
