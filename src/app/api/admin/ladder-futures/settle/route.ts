@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     if (correct) {
       winners++
-      await service.rpc('credit_points', { p_user_id: pick.user_id, p_amount: pts })
+      await service.rpc('credit_points', { p_user_id: pick.user_id, p_points: pts })
     }
   }
 

@@ -89,6 +89,7 @@ export default function AdminPanel() {
   const [futuresPositions, setFuturesPositions] = useState<Record<string, string>>({})
   const [futuresPtsInput, setFuturesPtsInput] = useState('')
   const [settlingFutures, setSettlingFutures] = useState<string | null>(null)
+  const [unsettlingFutures, setUnsettlingFutures] = useState<string | null>(null)
 
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
@@ -250,6 +251,19 @@ export default function AdminPanel() {
     })
     if (res.ok) { showToast('Config saved'); fetchFutures() }
     else { const d = await res.json(); showToast(`Error: ${d.error}`) }
+  }
+
+  async function unsettleFutures(runner_id: string) {
+    setUnsettlingFutures(runner_id)
+    const res = await fetch('/api/admin/ladder-futures/unsettle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runner_id }),
+    })
+    const d = await res.json()
+    if (res.ok) { showToast(`Unsettled — ${d.reversals} pick${d.reversals !== 1 ? 's' : ''} reversed`); fetchFutures(); fetchAudit() }
+    else showToast(`Error: ${d.error}`)
+    setUnsettlingFutures(null)
   }
 
   async function settleFutures(runner_id: string) {
@@ -979,9 +993,18 @@ export default function AdminPanel() {
 
                 {/* Settle input */}
                 {r.line?.settled_at ? (
-                  <span style={{ fontSize: '13px', color: 'var(--green)', fontWeight: 700 }}>
-                    {r.line.final_position}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--green)', fontWeight: 700 }}>
+                      {r.line.final_position}
+                    </span>
+                    <button
+                      onClick={() => unsettleFutures(r.id)}
+                      disabled={unsettlingFutures === r.id}
+                      style={{ padding: '3px 7px', background: 'var(--orange-bg)', color: 'var(--orange)', border: '0.5px solid var(--orange-border)', borderRadius: '4px', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {unsettlingFutures === r.id ? '...' : 'Unsettle'}
+                    </button>
+                  </div>
                 ) : r.line ? (
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <input
