@@ -66,18 +66,24 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
     setTimeout(() => setToast(null), 3000)
   }
 
-  function togglePick(runner_id: string) {
+  function selectPick(runner_id: string, direction: 'over' | 'under') {
     if (!loggedIn) { setShowLoginPrompt(true); return }
     if (config.is_locked) return
-    if (savedPicks.length > 0) return // already submitted
+    if (savedPicks.length > 0) return
 
     setDraftPicks(prev => {
       const cur = prev[runner_id]
-      if (!cur) return { ...prev, [runner_id]: 'over' }
-      if (cur === 'over') return { ...prev, [runner_id]: 'under' }
-      const next = { ...prev }
-      delete next[runner_id]
-      return next
+      // clicking the active direction → deselect
+      if (cur === direction) {
+        const next = { ...prev }
+        delete next[runner_id]
+        return next
+      }
+      // switching direction on an already-picked runner → allow
+      if (cur) return { ...prev, [runner_id]: direction }
+      // new pick — only allow if under the limit
+      if (Object.keys(prev).length >= REQUIRED_PICKS) return prev
+      return { ...prev, [runner_id]: direction }
     })
   }
 
@@ -176,8 +182,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
 
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           <button
-            onClick={() => !overActive && isEditable && togglePick(entry.runner_id)}
-            disabled={!isEditable && !overActive}
+            onClick={() => isEditable && selectPick(entry.runner_id, 'over')}
             style={{
               padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
               border: '1px solid',
@@ -191,8 +196,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
             OVER
           </button>
           <button
-            onClick={() => !underActive && isEditable && togglePick(entry.runner_id)}
-            disabled={!isEditable && !underActive}
+            onClick={() => isEditable && selectPick(entry.runner_id, 'under')}
             style={{
               padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
               border: '1px solid',
