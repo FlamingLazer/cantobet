@@ -59,6 +59,9 @@ function UserHistoryModal({
   const [futurePicks, setFuturePicks] = useState<FuturesPick[]>([])
   const [stats, setStats] = useState<{ race_points: number; futures_points: number; futures_correct: number; futures_settled: number; futures_total: number; futures_locked: boolean; futures_visible: boolean } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showAllRace, setShowAllRace] = useState(false)
+  const [showAllFutures, setShowAllFutures] = useState(false)
+  const COLLAPSED = 5
 
   useEffect(() => {
     fetch(`/api/users/${userId}/profile`)
@@ -162,7 +165,7 @@ function UserHistoryModal({
                   No settled predictions yet.
                 </div>
               )}
-              {history.map(h => {
+              {(showAllRace ? history : history.slice(0, COLLAPSED)).map(h => {
                 const won = h.status === 'won'
                 const race = h.race_runner?.race
                 const runner = h.race_runner?.runner
@@ -189,6 +192,11 @@ function UserHistoryModal({
                   </div>
                 )
               })}
+              {history.length > COLLAPSED && (
+                <button onClick={() => setShowAllRace(s => !s)} style={{ width: '100%', marginTop: '6px', padding: '5px', background: 'none', border: '0.5px solid var(--border)', borderRadius: '5px', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer' }}>
+                  {showAllRace ? 'Show less' : `Show ${history.length - COLLAPSED} more`}
+                </button>
+              )}
 
               {/* Futures picks */}
               {futuresVisible && futurePicks.length > 0 && (
@@ -196,7 +204,7 @@ function UserHistoryModal({
                   <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '14px 0 6px' }}>
                     Ladder Futures
                   </div>
-                  {futurePicks.map(fp => {
+                  {(showAllFutures ? futurePicks : futurePicks.slice(0, COLLAPSED)).map(fp => {
                     const won = fp.is_correct === true
                     const lost = fp.is_correct === false
                     return (
@@ -233,6 +241,11 @@ function UserHistoryModal({
                       </div>
                     )
                   })}
+                  {futurePicks.length > COLLAPSED && (
+                    <button onClick={() => setShowAllFutures(s => !s)} style={{ width: '100%', marginTop: '6px', padding: '5px', background: 'none', border: '0.5px solid var(--border)', borderRadius: '5px', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer' }}>
+                      {showAllFutures ? 'Show less' : `Show ${futurePicks.length - COLLAPSED} more`}
+                    </button>
+                  )}
                 </>
               )}
             </>

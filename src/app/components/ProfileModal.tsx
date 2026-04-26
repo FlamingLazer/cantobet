@@ -74,6 +74,9 @@ export default function ProfileModal({
 }: ProfileModalProps) {
   const [data, setData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showAllRace, setShowAllRace] = useState(false)
+  const [showAllFutures, setShowAllFutures] = useState(false)
+  const COLLAPSED = 5
 
   useEffect(() => {
     fetch(`/api/users/${userId}/profile`)
@@ -180,7 +183,7 @@ export default function ProfileModal({
                   {picks.length === 0 ? (
                     <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--dim)', fontSize: '12px' }}>No predictions yet</div>
                   ) : (
-                    picks.map(pick => {
+                    (showAllRace ? picks : picks.slice(0, COLLAPSED)).map(pick => {
                       const race = pick.race_runner?.race
                       const runner = pick.race_runner?.runner
                       const won = pick.status === 'won'
@@ -225,6 +228,11 @@ export default function ProfileModal({
                       )
                     })
                   )}
+                  {picks.length > COLLAPSED && (
+                    <button onClick={() => setShowAllRace(s => !s)} style={{ width: '100%', marginTop: '4px', padding: '5px', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer' }}>
+                      {showAllRace ? 'Show less' : `Show ${picks.length - COLLAPSED} more`}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -236,7 +244,7 @@ export default function ProfileModal({
                   </div>
                   <div style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', marginBottom: '10px' }}>
                     <div style={{ padding: '8px 12px' }}>
-                      {futurePicks.map(fp => {
+                      {(showAllFutures ? futurePicks : futurePicks.slice(0, COLLAPSED)).map(fp => {
                         const isSettled = !!fp.line?.settled_at
                         const correct = fp.is_correct === true
                         const incorrect = fp.is_correct === false
@@ -281,6 +289,11 @@ export default function ProfileModal({
                           </div>
                         )
                       })}
+                      {futurePicks.length > COLLAPSED && (
+                        <button onClick={() => setShowAllFutures(s => !s)} style={{ width: '100%', marginTop: '4px', padding: '5px', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer' }}>
+                          {showAllFutures ? 'Show less' : `Show ${futurePicks.length - COLLAPSED} more`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </>
