@@ -57,7 +57,7 @@ function UserHistoryModal({
 }) {
   const [history, setHistory] = useState<UserHistory[]>([])
   const [futurePicks, setFuturePicks] = useState<FuturesPick[]>([])
-  const [stats, setStats] = useState<{ race_points: number; futures_points: number; futures_correct: number; futures_settled: number; futures_total: number; futures_locked: boolean } | null>(null)
+  const [stats, setStats] = useState<{ race_points: number; futures_points: number; futures_correct: number; futures_settled: number; futures_total: number; futures_locked: boolean; futures_visible: boolean } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -77,6 +77,7 @@ function UserHistoryModal({
   const racePts = stats?.race_points ?? 0
   const futuresPts = stats?.futures_points ?? 0
   const futuresLocked = stats?.futures_locked ?? false
+  const futuresVisible = stats?.futures_visible ?? false
   const futuresCorrect = stats?.futures_correct ?? 0
   const futuresTotal = stats?.futures_total ?? 0
 
@@ -138,9 +139,9 @@ function UserHistoryModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
                   { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
-                  { val: futuresLocked ? futuresPts.toFixed(1) : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: futuresVisible ? futuresPts.toFixed(1) : '—', label: 'Futures pts', color: 'var(--gold)' },
                   { val: `${correct}/${history.length}`, label: 'Race picks', color: 'var(--green)' },
-                  { val: futuresLocked ? `${futuresCorrect}/${stats?.futures_settled ?? 0}` : '—', label: 'Futures picks', color: 'var(--green)' },
+                  { val: futuresVisible ? `${futuresCorrect}/${stats?.futures_settled ?? 0}` : '—', label: 'Futures picks', color: 'var(--green)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
@@ -190,7 +191,7 @@ function UserHistoryModal({
               })}
 
               {/* Futures picks */}
-              {futuresLocked && futurePicks.length > 0 && (
+              {futuresVisible && futurePicks.length > 0 && (
                 <>
                   <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '14px 0 6px' }}>
                     Ladder Futures

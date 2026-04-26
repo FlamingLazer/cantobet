@@ -90,6 +90,7 @@ export async function GET(
       futures_settled: settledFutures.length,
       futures_total: visibleFuturePicks.length,
       futures_locked: futuresLocked,
+      futures_visible: futuresLocked || canSeeAll,
     },
     bets: bets ?? [],
     futures_picks: visibleFuturePicks,

@@ -143,8 +143,9 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
       )
     }
 
-    const activePicks = savedPicks.filter(p => !lineMap[p.runner_id]?.settled_at)
-    const settledPicks = savedPicks.filter(p => lineMap[p.runner_id]?.settled_at)
+    const bySeed = (a: UserPick, b: UserPick) => (lineMap[a.runner_id]?.runner?.seed ?? 999) - (lineMap[b.runner_id]?.runner?.seed ?? 999)
+    const activePicks = savedPicks.filter(p => !lineMap[p.runner_id]?.settled_at).sort(bySeed)
+    const settledPicks = savedPicks.filter(p => lineMap[p.runner_id]?.settled_at).sort(bySeed)
     const correctCount = settledPicks.filter(p => p.is_correct === true).length
     const futuresPts = savedPicks.reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
 
