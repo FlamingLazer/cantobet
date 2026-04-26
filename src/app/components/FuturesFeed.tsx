@@ -26,6 +26,7 @@ interface UserPick {
   runner_id: string
   direction: 'over' | 'under'
   is_correct: boolean | null
+  points_earned: number | null
 }
 
 interface FuturesFeedProps {
@@ -43,6 +44,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
   const [toast, setToast] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [lockedSection, setLockedSection] = useState<'active' | 'settled'>('active')
 
   const fetchData = useCallback(async () => {
     const res = await fetch('/api/ladder-futures')
@@ -51,11 +53,10 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
     setConfig(data.config)
     setLines(data.lines)
     setSavedPicks(data.picks)
-    if (data.config.is_locked || data.picks.length > 0) {
-      const d: Record<string, 'over' | 'under'> = {}
-      for (const p of data.picks) d[p.runner_id] = p.direction
-      setDraftPicks(d)
-    }
+    // always seed draft from saved picks so edits are possible before lock
+    const d: Record<string, 'over' | 'under'> = {}
+    for (const p of data.picks) d[p.runner_id] = p.direction
+    setDraftPicks(d)
     setLoading(false)
   }, [])
 
@@ -69,19 +70,15 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
   function selectPick(runner_id: string, direction: 'over' | 'under') {
     if (!loggedIn) { setShowLoginPrompt(true); return }
     if (config.is_locked) return
-    if (savedPicks.length > 0) return
 
     setDraftPicks(prev => {
       const cur = prev[runner_id]
-      // clicking the active direction → deselect
       if (cur === direction) {
         const next = { ...prev }
         delete next[runner_id]
         return next
       }
-      // switching direction on an already-picked runner → allow
       if (cur) return { ...prev, [runner_id]: direction }
-      // new pick — only allow if under the limit
       if (Object.keys(prev).length >= REQUIRED_PICKS) return prev
       return { ...prev, [runner_id]: direction }
     })
@@ -108,10 +105,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
 
   const draftCount = Object.keys(draftPicks).length
   const hasSubmitted = savedPicks.length > 0
-  const isEditable = loggedIn && !config.is_locked && !hasSubmitted
-
-  const settled = lines.filter(l => l.settled_at)
-  const active = lines.filter(l => !l.settled_at)
+  const lineMap = Object.fromEntries(lines.map(l => [l.runner_id, l]))
 
   if (loading) {
     return <div style={{ color: 'var(--muted)', padding: '40px', textAlign: 'center' }}>Loading futures...</div>
@@ -126,27 +120,181 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
     )
   }
 
-  function RunnerRow({ entry }: { entry: FuturesLine }) {
-    const pick = draftPicks[entry.runner_id]
-    const savedPick = savedPicks.find(p => p.runner_id === entry.runner_id)
-    const isSettled = !!entry.settled_at
-
-    let resultBadge: React.ReactNode = null
-    if (isSettled && savedPick) {
-      resultBadge = savedPick.is_correct === true
-        ? <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: 'var(--green-bg)', color: 'var(--green)', border: '1px solid var(--green-border)' }}>CORRECT +{config.points_per_correct_pick}</span>
-        : <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: 'var(--red-bg)', color: 'var(--red2)', border: '1px solid var(--red-border)' }}>INCORRECT</span>
+  // ── LOCKED VIEW ──────────────────────────────────────────────────────────────
+  if (config.is_locked) {
+    if (!loggedIn || !hasSubmitted) {
+      return (
+        <div style={{
+          background: 'var(--navy2)', border: '0.5px solid var(--border)',
+          borderRadius: '8px', padding: '32px', textAlign: 'center',
+        }}>
+          <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, marginBottom: '8px' }}>
+            Ladder Futures
+          </div>
+          <span style={{
+            fontSize: '9px', fontWeight: 800, padding: '2px 7px', borderRadius: '3px',
+            background: 'var(--orange-bg)', color: 'var(--orange)', border: '1px solid var(--orange-border)',
+            letterSpacing: '.5px',
+          }}>LOCKED</span>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '14px' }}>
+            {!loggedIn ? 'Log in to see your picks.' : 'Predictions are closed — you did not submit picks before the deadline.'}
+          </div>
+        </div>
+      )
     }
 
+    const activePicks = savedPicks.filter(p => !lineMap[p.runner_id]?.settled_at)
+    const settledPicks = savedPicks.filter(p => lineMap[p.runner_id]?.settled_at)
+    const correctCount = settledPicks.filter(p => p.is_correct === true).length
+    const futuresPts = savedPicks.reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
+
+    const displayPicks = lockedSection === 'active' ? activePicks : settledPicks
+
+    return (
+      <div>
+        {/* Header */}
+        <div style={{
+          background: 'var(--navy2)', border: '0.5px solid var(--border)',
+          borderRadius: '8px', padding: '12px 14px', marginBottom: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '.5px', textTransform: 'uppercase' }}>
+              Ladder Futures
+            </div>
+            <span style={{
+              fontSize: '9px', fontWeight: 800, padding: '2px 7px', borderRadius: '3px',
+              background: 'var(--orange-bg)', color: 'var(--orange)', border: '1px solid var(--orange-border)',
+              letterSpacing: '.5px',
+            }}>LOCKED</span>
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+            {correctCount}/{settledPicks.length} settled correct
+            {futuresPts > 0 && <span style={{ color: 'var(--gold)', marginLeft: '8px' }}>+{futuresPts} pts earned</span>}
+          </div>
+        </div>
+
+        {/* Toggle */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '14px' }}>
+          <button
+            onClick={() => setLockedSection('active')}
+            style={{
+              padding: '8px', borderRadius: '6px',
+              border: `0.5px solid ${lockedSection === 'active' ? 'var(--red2)' : 'var(--border)'}`,
+              background: lockedSection === 'active' ? 'var(--red-bg)' : 'var(--navy2)',
+              color: lockedSection === 'active' ? 'var(--red2)' : 'var(--muted)',
+              fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 800,
+              letterSpacing: '.5px', textTransform: 'uppercase', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            }}
+          >
+            Active
+            {activePicks.length > 0 && (
+              <span style={{ background: 'var(--red2)', color: '#fff', borderRadius: '10px', fontSize: '10px', fontWeight: 700, padding: '1px 6px' }}>
+                {activePicks.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setLockedSection('settled')}
+            style={{
+              padding: '8px', borderRadius: '6px',
+              border: `0.5px solid ${lockedSection === 'settled' ? 'var(--green-border)' : 'var(--border)'}`,
+              background: lockedSection === 'settled' ? 'var(--green-bg)' : 'var(--navy2)',
+              color: lockedSection === 'settled' ? 'var(--green)' : 'var(--muted)',
+              fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 800,
+              letterSpacing: '.5px', textTransform: 'uppercase', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            }}
+          >
+            Complete
+            {settledPicks.length > 0 && (
+              <span style={{ background: 'var(--green)', color: '#fff', borderRadius: '10px', fontSize: '10px', fontWeight: 700, padding: '1px 6px' }}>
+                {settledPicks.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Pick list */}
+        {displayPicks.length === 0 && (
+          <div style={{ color: 'var(--dim)', padding: '40px', textAlign: 'center', fontSize: '13px' }}>
+            {lockedSection === 'active' ? 'All your picks have been settled.' : 'No settled picks yet.'}
+          </div>
+        )}
+
+        {displayPicks.map(pick => {
+          const line = lineMap[pick.runner_id]
+          const won = pick.is_correct === true
+          const lost = pick.is_correct === false
+          return (
+            <div key={pick.runner_id} style={{
+              background: 'var(--navy2)',
+              border: `0.5px solid ${won ? 'var(--green-border)' : lost ? 'var(--border)' : 'var(--border)'}`,
+              borderRadius: '7px', padding: '10px 12px', marginBottom: '6px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{
+                  fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                }}>
+                  {line?.runner?.username ?? '—'}
+                  <span style={{
+                    fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px',
+                    background: pick.direction === 'over' ? 'var(--blue-bg)' : 'var(--orange-bg)',
+                    color: pick.direction === 'over' ? 'var(--blue)' : 'var(--orange)',
+                    border: `1px solid ${pick.direction === 'over' ? 'var(--blue-border)' : 'var(--orange-border)'}`,
+                  }}>
+                    {pick.direction.toUpperCase()}
+                  </span>
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
+                  O/U {line?.line}
+                  {line?.final_position && <span style={{ marginLeft: '4px' }}>· finished {line.final_position}</span>}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                {lockedSection === 'active' && (
+                  <span style={{
+                    fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '3px',
+                    background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue-border)',
+                  }}>PENDING</span>
+                )}
+                {won && (
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--green)', fontFamily: "'Montserrat', sans-serif" }}>
+                      +{pick.points_earned ?? 0}pts
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--dim)' }}>Correct</div>
+                  </div>
+                )}
+                {lost && (
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--red2)', fontFamily: "'Montserrat', sans-serif" }}>
+                      +0pts
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--dim)' }}>Incorrect</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // ── PRE-LOCK VIEW ─────────────────────────────────────────────────────────────
+  function RunnerRow({ entry }: { entry: FuturesLine }) {
+    const pick = draftPicks[entry.runner_id]
     const overActive = pick === 'over'
     const underActive = pick === 'under'
+    const isEditable = loggedIn
 
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '9px 0',
-        borderBottom: '0.5px solid var(--border)',
-        opacity: isSettled ? 0.7 : 1,
+        padding: '9px 0', borderBottom: '0.5px solid var(--border)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
           {entry.runner.seed != null && (
@@ -155,31 +303,12 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
             </span>
           )}
           <div>
-            <div style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontSize: '14px', fontWeight: 700,
-              color: 'var(--white)',
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 700, color: 'var(--white)' }}>
               {entry.runner.username}
-              {resultBadge}
-              {isSettled && (
-                <span style={{ fontSize: '10px', color: 'var(--dim)', fontWeight: 400 }}>
-                  finished {entry.final_position}
-                </span>
-              )}
             </div>
-            <div style={{ fontSize: '10px', color: 'var(--dim)' }}>
-              O/U {entry.line}
-              {savedPick && !isSettled && (
-                <span style={{ marginLeft: '6px', color: savedPick.direction === 'over' ? 'var(--blue)' : 'var(--orange)', fontWeight: 700 }}>
-                  · {savedPick.direction.toUpperCase()} locked in
-                </span>
-              )}
-            </div>
+            <div style={{ fontSize: '10px', color: 'var(--dim)' }}>O/U {entry.line}</div>
           </div>
         </div>
-
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           <button
             onClick={() => isEditable && selectPick(entry.runner_id, 'over')}
@@ -221,28 +350,14 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         background: 'var(--navy2)', border: '0.5px solid var(--border)',
         borderRadius: '8px', padding: '12px 14px', marginBottom: '12px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <div style={{
-            fontFamily: "'Montserrat', sans-serif",
-            fontSize: '16px', fontWeight: 800,
-            letterSpacing: '.5px', textTransform: 'uppercase',
-          }}>
-            Ladder Futures
-          </div>
-          {config.is_locked && (
-            <span style={{
-              fontSize: '9px', fontWeight: 800, padding: '2px 7px', borderRadius: '3px',
-              background: 'var(--orange-bg)', color: 'var(--orange)', border: '1px solid var(--orange-border)',
-              letterSpacing: '.5px',
-            }}>LOCKED</span>
-          )}
+        <div style={{ marginBottom: '4px', fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '.5px', textTransform: 'uppercase' }}>
+          Ladder Futures
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px' }}>
           Pick over or under the line for each runner's final ladder placement (1 = best). Choose exactly {REQUIRED_PICKS} runners. Correct picks earn {config.points_per_correct_pick} pts each.
         </div>
 
-        {/* Progress / submit */}
-        {!hasSubmitted && !config.is_locked && loggedIn && (
+        {loggedIn && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ flex: 1, height: '4px', background: 'var(--navy4)', borderRadius: '2px', overflow: 'hidden' }}>
               <div style={{
@@ -269,83 +384,35 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
                 transition: 'background .15s',
               }}
             >
-              {submitting ? 'Saving...' : 'Submit Picks'}
+              {submitting ? 'Saving...' : hasSubmitted ? 'Update Picks' : 'Submit Picks'}
             </button>
           </div>
         )}
-
-        {hasSubmitted && !config.is_locked && (
-          <div style={{ fontSize: '11px', color: 'var(--green)' }}>
-            Your {REQUIRED_PICKS} picks are locked in. Results will update as runners are settled.
-          </div>
-        )}
-
-        {config.is_locked && !hasSubmitted && loggedIn && (
-          <div style={{ fontSize: '11px', color: 'var(--orange)' }}>
-            Predictions are closed.
-          </div>
-        )}
-
       </div>
 
-      {/* Active runners */}
-      {active.length > 0 && (
-        <div style={{
-          background: 'var(--navy2)', border: '0.5px solid var(--border)',
-          borderRadius: '8px', padding: '12px 14px', marginBottom: '12px',
-        }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--dim)', letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: '4px' }}>
-            Active
-          </div>
-          {active.map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
-        </div>
-      )}
+      {/* All runners */}
+      <div style={{
+        background: 'var(--navy2)', border: '0.5px solid var(--border)',
+        borderRadius: '8px', padding: '12px 14px',
+      }}>
+        {lines.map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
+      </div>
 
-      {/* Settled runners */}
-      {settled.length > 0 && (
-        <div style={{
-          background: 'var(--navy2)', border: '0.5px solid var(--border)',
-          borderRadius: '8px', padding: '12px 14px',
-        }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--dim)', letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: '4px' }}>
-            Settled
-          </div>
-          {settled.map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
-        </div>
-      )}
-
-      {/* Login prompt overlay */}
+      {/* Login prompt */}
       {showLoginPrompt && (
         <div
           onClick={() => setShowLoginPrompt(false)}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 100,
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              background: 'var(--navy2)', border: '0.5px solid var(--border)',
-              borderRadius: '10px', padding: '28px 32px',
-              textAlign: 'center', maxWidth: '320px',
-            }}
+            style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '10px', padding: '28px 32px', textAlign: 'center', maxWidth: '320px' }}
           >
-            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, marginBottom: '8px' }}>
-              Log in to predict
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '20px' }}>
-              You need to be logged in to place a prediction.
-            </div>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, marginBottom: '8px' }}>Log in to predict</div>
+            <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '20px' }}>You need to be logged in to place a prediction.</div>
             <button
               onClick={() => setShowLoginPrompt(false)}
-              style={{
-                padding: '8px 24px', background: 'var(--red2)', color: '#fff',
-                border: 'none', borderRadius: '6px',
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: '14px', fontWeight: 800, cursor: 'pointer',
-              }}
+              style={{ padding: '8px 24px', background: 'var(--red2)', color: '#fff', border: 'none', borderRadius: '6px', fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800, cursor: 'pointer' }}
             >
               OK
             </button>
@@ -358,8 +425,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
           position: 'fixed', bottom: '20px', right: '20px',
           background: 'var(--green-bg)', border: '1px solid var(--green-border)',
           color: 'var(--green)', padding: '10px 16px',
-          borderRadius: '7px', fontSize: '13px', fontWeight: 600,
-          zIndex: 200,
+          borderRadius: '7px', fontSize: '13px', fontWeight: 600, zIndex: 200,
         }}>
           {toast}
         </div>
