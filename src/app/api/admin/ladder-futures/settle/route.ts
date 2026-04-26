@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     await service
       .from('ladder_futures_picks')
-      .update({ is_correct: correct })
+      .update({ is_correct: correct, points_earned: correct ? pts : 0 })
       .eq('id', pick.id)
 
     if (correct) {

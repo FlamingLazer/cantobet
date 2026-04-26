@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest) {
   if (user) {
     const { data } = await service
       .from('ladder_futures_picks')
-      .select('runner_id, direction, is_correct')
+      .select('runner_id, direction, is_correct, points_earned')
       .eq('user_id', user.id)
     picks = data ?? []
   }

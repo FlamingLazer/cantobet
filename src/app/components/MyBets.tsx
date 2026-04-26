@@ -16,6 +16,21 @@ interface Pick {
   }
 }
 
+interface FuturesPick {
+  runner_id: string
+  direction: 'over' | 'under'
+  is_correct: boolean | null
+  points_earned: number | null
+}
+
+interface FuturesLine {
+  runner_id: string
+  line: number
+  final_position: number | null
+  settled_at: string | null
+  runner: { username: string }
+}
+
 function Flag({ code }: { code?: string | null }) {
   if (!code) return null
   return (
@@ -29,9 +44,11 @@ function Flag({ code }: { code?: string | null }) {
 
 export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
   const [picks, setPicks] = useState<Pick[]>([])
+  const [futuresPicks, setFuturesPicks] = useState<FuturesPick[]>([])
+  const [futuresLines, setFuturesLines] = useState<Record<string, FuturesLine>>({})
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState<'active' | 'settled'>('active')
-  const [totalPoints, setTotalPoints] = useState(0)
+  const [racePoints, setRacePoints] = useState(0)
   const supabase = createClient()
 
   useEffect(() => {
@@ -42,26 +59,34 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
 
-    const { data } = await supabase
-      .from('bets')
-      .select(`
-        id, odds_at_placement, points_earned, status, placed_at,
-        race_runner:race_runners(
-          odds,
-          runner:runners(username, country_code),
-          race:races(week, rung, status, scheduled_at)
-        )
-      `)
-      .eq('user_id', user.id)
-      .order('placed_at', { ascending: false })
+    const [betsResult, futuresResult] = await Promise.all([
+      supabase
+        .from('bets')
+        .select(`
+          id, odds_at_placement, points_earned, status, placed_at,
+          race_runner:race_runners(
+            odds,
+            runner:runners(username, country_code),
+            race:races(week, rung, status, scheduled_at)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('placed_at', { ascending: false }),
+      fetch('/api/ladder-futures'),
+    ])
 
-    const picksData = (data as unknown as Pick[]) ?? []
+    const picksData = (betsResult.data as unknown as Pick[]) ?? []
     setPicks(picksData)
+    setRacePoints(picksData.filter(p => p.status === 'won').reduce((sum, p) => sum + (p.points_earned ?? 0), 0))
 
-    const earned = picksData
-      .filter(p => p.status === 'won')
-      .reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
-    setTotalPoints(earned)
+    if (futuresResult.ok) {
+      const futuresData = await futuresResult.json()
+      setFuturesPicks(futuresData.picks ?? [])
+      const lineMap: Record<string, FuturesLine> = {}
+      for (const l of (futuresData.lines as FuturesLine[])) lineMap[l.runner_id] = l
+      setFuturesLines(lineMap)
+    }
+
     setLoading(false)
   }
 
@@ -71,6 +96,11 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
   const accuracy = settledPicks.length > 0
     ? Math.round((correctPicks / settledPicks.length) * 100)
     : 0
+
+  const settledFutures = futuresPicks.filter(p => futuresLines[p.runner_id]?.settled_at)
+  const correctFutures = futuresPicks.filter(p => p.is_correct === true)
+  const futuresPoints = correctFutures.reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
+  const hasFutures = futuresPicks.length > 0
 
   if (!loggedIn) {
     return (
@@ -94,9 +124,9 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
         gap: '8px', marginBottom: '16px',
       }}>
         {[
-          { val: totalPoints.toFixed(1), label: 'Total points', color: 'var(--gold)' },
-          { val: `${correctPicks}/${settledPicks.length}`, label: 'Correct picks', color: 'var(--green)' },
-          { val: `${accuracy}%`, label: 'Accuracy', color: 'var(--blue)' },
+          { val: racePoints.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
+          { val: `${correctPicks}/${settledPicks.length}`, label: 'Race picks', color: 'var(--green)' },
+          { val: `${accuracy}%`, label: 'Race accuracy', color: 'var(--blue)' },
         ].map((s, i) => (
           <div key={i} style={{
             background: 'var(--navy2)', border: '0.5px solid var(--border)',
@@ -266,6 +296,82 @@ export default function MyBets({ loggedIn = false }: { loggedIn?: boolean }) {
             )
           })}
         </>
+      )}
+
+      {/* Futures section */}
+      {hasFutures && (
+        <div style={{ marginTop: '20px' }}>
+          <div style={{
+            background: 'var(--navy2)', border: '0.5px solid var(--border)',
+            borderRadius: '8px', padding: '12px 14px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: '14px', fontWeight: 800,
+                letterSpacing: '.4px', textTransform: 'uppercase',
+              }}>
+                Ladder Futures
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                {correctFutures.length}/{settledFutures.length} correct
+                {futuresPoints > 0 && <span style={{ color: 'var(--gold)', marginLeft: '6px' }}>+{futuresPoints}pts</span>}
+              </div>
+            </div>
+            {futuresPicks.map(fp => {
+              const line = futuresLines[fp.runner_id]
+              const isSettled = !!line?.settled_at
+              const correct = fp.is_correct === true
+              const incorrect = fp.is_correct === false
+              return (
+                <div key={fp.runner_id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '7px 0', borderBottom: '0.5px solid var(--border)',
+                  opacity: isSettled ? 1 : 0.8,
+                }}>
+                  <div>
+                    <div style={{
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontSize: '13px', fontWeight: 700,
+                    }}>
+                      {line?.runner?.username ?? '—'}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+                      O/U {line?.line} · {fp.direction.toUpperCase()}
+                      {isSettled && line?.final_position && (
+                        <span style={{ marginLeft: '4px' }}>· finished {line.final_position}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    {!isSettled && (
+                      <span style={{
+                        fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '3px',
+                        background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue-border)',
+                      }}>PENDING</span>
+                    )}
+                    {correct && (
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--green)', fontFamily: "'Montserrat', sans-serif" }}>
+                          +{fp.points_earned ?? 0}pts
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--dim)' }}>Correct</div>
+                      </div>
+                    )}
+                    {incorrect && (
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--red2)', fontFamily: "'Montserrat', sans-serif" }}>
+                          +0pts
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--dim)' }}>Incorrect</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       )}
     </div>
   )

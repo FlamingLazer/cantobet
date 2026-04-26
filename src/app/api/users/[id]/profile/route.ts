@@ -13,6 +13,13 @@ export async function GET(
 
   const isOwnProfile = user?.id === id
 
+  let isViewerAdmin = false
+  if (user && !isOwnProfile) {
+    const { data: viewerProfile } = await service.from('users').select('is_admin').eq('id', user.id).single()
+    isViewerAdmin = viewerProfile?.is_admin ?? false
+  }
+  const canSeeAll = isOwnProfile || isViewerAdmin
+
   const betsQuery = service
     .from('bets')
     .select(`
@@ -26,16 +33,32 @@ export async function GET(
     .eq('user_id', id)
     .order('placed_at', { ascending: false })
 
-  if (!isOwnProfile) {
+  if (!canSeeAll) {
     betsQuery.neq('status', 'pending')
+  }
+
+  const futuresQuery = service
+    .from('ladder_futures_picks')
+    .select(`
+      id, runner_id, direction, is_correct, points_earned,
+      line:ladder_futures_lines(line, final_position, settled_at,
+        runner:runners(username)
+      )
+    `)
+    .eq('user_id', id)
+
+  if (!canSeeAll) {
+    futuresQuery.not('line.settled_at', 'is', null)
   }
 
   const [
     { data: userData },
     { data: bets },
+    { data: futurePicks },
   ] = await Promise.all([
     service.from('users').select('*').eq('id', id).single(),
     betsQuery,
+    futuresQuery,
   ])
 
   const settledBets = bets?.filter((b: { status: string }) => b.status !== 'pending') ?? []
@@ -45,6 +68,10 @@ export async function GET(
     ? Math.round((correctBets.length / settledBets.length) * 100)
     : 0
 
+  const settledFutures = (futurePicks ?? []).filter((p: { line?: { settled_at?: string | null } | null }) => p.line?.settled_at)
+  const correctFutures = settledFutures.filter((p: { is_correct?: boolean | null }) => p.is_correct === true)
+  const futuresPts = correctFutures.reduce((sum: number, p: { points_earned?: number | null }) => sum + (p.points_earned ?? 0), 0)
+
   return NextResponse.json({
     user: userData,
     stats: {
@@ -52,10 +79,13 @@ export async function GET(
       total_correct: correctBets.length,
       total_predictions: settledBets.length,
       accuracy,
+      race_points: totalPoints,
+      futures_points: futuresPts,
+      futures_correct: correctFutures.length,
+      futures_total: settledFutures.length,
     },
     bets: bets ?? [],
-    futures_bets: [],
-    parlay_bets: [],
+    futures_picks: futurePicks ?? [],
     watch_sessions: [],
   })
 }

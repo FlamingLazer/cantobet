@@ -14,10 +14,18 @@ interface Pick {
   }
 }
 
-interface WatchSession {
+interface FuturesPick {
   id: string
-  started_at: string
-  studs_credited: number
+  runner_id: string
+  direction: 'over' | 'under'
+  is_correct: boolean | null
+  points_earned: number | null
+  line?: {
+    line: number
+    final_position: number | null
+    settled_at: string | null
+    runner?: { username: string }
+  } | null
 }
 
 interface ProfileData {
@@ -26,9 +34,13 @@ interface ProfileData {
     total_correct: number
     total_predictions: number
     accuracy: number
+    race_points: number
+    futures_points: number
+    futures_correct: number
+    futures_total: number
   }
   bets: Pick[]
-  watch_sessions: WatchSession[]
+  futures_picks: FuturesPick[]
 }
 
 interface ProfileModalProps {
@@ -68,12 +80,14 @@ export default function ProfileModal({
   }, [userId])
 
   const picks = data?.bets ?? []
+  const futurePicks = data?.futures_picks ?? []
   const settledPicks = picks.filter(p => p.status !== 'pending')
   const correctPicks = settledPicks.filter(p => p.status === 'won')
-  const totalPoints = correctPicks.reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
   const accuracy = settledPicks.length > 0
     ? Math.round((correctPicks.length / settledPicks.length) * 100)
     : 0
+  const racePts = data?.stats.race_points ?? 0
+  const futuresPts = data?.stats.futures_points ?? 0
 
   return (
     <div
@@ -137,10 +151,10 @@ export default function ProfileModal({
               {/* Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
-                  { val: totalPoints.toFixed(1), label: 'Total points', color: 'var(--gold)' },
-                  { val: `${correctPicks.length}/${settledPicks.length}`, label: 'Correct picks', color: 'var(--green)' },
-                  { val: `${accuracy}%`, label: 'Accuracy', color: 'var(--blue)' },
-                  { val: picks.filter(p => p.status === 'pending').length.toString(), label: 'Pending', color: 'var(--muted)' },
+                  { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
+                  { val: futuresPts > 0 ? `+${futuresPts}` : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: `${correctPicks.length}/${settledPicks.length}`, label: 'Race picks', color: 'var(--green)' },
+                  { val: `${accuracy}%`, label: 'Race accuracy', color: 'var(--blue)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
@@ -208,6 +222,64 @@ export default function ProfileModal({
                   )}
                 </div>
               </div>
+
+              {/* Futures picks */}
+              {futurePicks.length > 0 && (
+                <>
+                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '12px 0 6px' }}>
+                    Ladder Futures
+                  </div>
+                  <div style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '8px', overflow: 'hidden', marginBottom: '10px' }}>
+                    <div style={{ padding: '8px 12px' }}>
+                      {futurePicks.map(fp => {
+                        const isSettled = !!fp.line?.settled_at
+                        const correct = fp.is_correct === true
+                        const incorrect = fp.is_correct === false
+                        return (
+                          <div key={fp.id} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '6px 0', borderBottom: '0.5px solid var(--border)',
+                            fontSize: '12px',
+                          }}>
+                            <div>
+                              <div style={{
+                                fontFamily: "'Montserrat', sans-serif",
+                                fontSize: '13px', fontWeight: 700,
+                                display: 'flex', alignItems: 'center', gap: '5px',
+                              }}>
+                                {fp.line?.runner?.username ?? '—'}
+                                <span style={{
+                                  fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px',
+                                  background: fp.direction === 'over' ? 'var(--blue-bg)' : 'var(--orange-bg)',
+                                  color: fp.direction === 'over' ? 'var(--blue)' : 'var(--orange)',
+                                  border: `1px solid ${fp.direction === 'over' ? 'var(--blue-border)' : 'var(--orange-border)'}`,
+                                }}>
+                                  {fp.direction.toUpperCase()}
+                                </span>
+                                {!isSettled && (
+                                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: 'var(--navy4)', color: 'var(--muted)' }}>
+                                    PENDING
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+                                O/U {fp.line?.line}
+                                {isSettled && fp.line?.final_position && ` · finished ${fp.line.final_position}`}
+                              </div>
+                            </div>
+                            <div style={{
+                              fontSize: '14px', fontWeight: 700,
+                              color: correct ? 'var(--green)' : incorrect ? 'var(--red2)' : 'var(--muted)',
+                            }}>
+                              {correct ? `+${fp.points_earned ?? 0}` : incorrect ? '+0' : '—'}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Actions */}
               <button
