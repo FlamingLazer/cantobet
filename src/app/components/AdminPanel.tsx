@@ -45,8 +45,28 @@ interface UserRow {
   created_at: string
 }
 
+interface FuturesRunner {
+  id: string
+  username: string
+  seed: number | null
+  status: string
+  line: FuturesLine | null
+}
+
+interface FuturesLine {
+  runner_id: string
+  line: number
+  final_position: number | null
+  settled_at: string | null
+}
+
+interface FuturesConfig {
+  is_locked: boolean
+  points_per_correct_pick: number
+}
+
 export default function AdminPanel() {
-  const [activeSection, setActiveSection] = useState<'races' | 'settle' | 'users' | 'audit'>('races')
+  const [activeSection, setActiveSection] = useState<'races' | 'settle' | 'users' | 'futures' | 'audit'>('races')
   const [runners, setRunners] = useState<Runner[]>([])
   const [races, setRaces] = useState<RaceRow[]>([])
   const [settledRaces, setSettledRaces] = useState<RaceRow[]>([])
@@ -62,6 +82,13 @@ export default function AdminPanel() {
   const [editRaceId, setEditRaceId] = useState<string | null>(null)
   const [editTime, setEditTime] = useState('')
   const [editOdds, setEditOdds] = useState<Record<string, string>>({})
+
+  const [futuresConfig, setFuturesConfig] = useState<FuturesConfig>({ is_locked: false, points_per_correct_pick: 100 })
+  const [futuresRunners, setFuturesRunners] = useState<FuturesRunner[]>([])
+  const [futuresLines, setFuturesLines] = useState<Record<string, string>>({})
+  const [futuresPositions, setFuturesPositions] = useState<Record<string, string>>({})
+  const [futuresPtsInput, setFuturesPtsInput] = useState('')
+  const [settlingFutures, setSettlingFutures] = useState<string | null>(null)
 
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
@@ -99,6 +126,7 @@ export default function AdminPanel() {
     fetchSettledRaces()
     fetchUsers()
     fetchAudit()
+    fetchFutures()
   }, [])
 
   async function saveRaceEdit() {
@@ -174,6 +202,69 @@ export default function AdminPanel() {
       .order('created_at', { ascending: false })
       .limit(100)
     setAuditLog((data as unknown as AuditEntry[]) ?? [])
+  }
+
+  async function fetchFutures() {
+    const [res, runnersResult] = await Promise.all([
+      fetch('/api/ladder-futures'),
+      supabase.from('runners').select('id, username, seed, status').order('seed'),
+    ])
+    if (!res.ok) return
+    const data = await res.json()
+    setFuturesConfig(data.config)
+    setFuturesPtsInput(String(data.config.points_per_correct_pick))
+
+    const { data: allRunners } = runnersResult
+
+    const lineMap: Record<string, FuturesLine> = {}
+    for (const l of (data.lines as FuturesLine[])) lineMap[l.runner_id] = l
+
+    const combined: FuturesRunner[] = ((allRunners ?? []) as { id: string; username: string; seed: number | null; status: string }[]).map(r => ({
+      ...r,
+      line: lineMap[r.id] ?? null,
+    }))
+    setFuturesRunners(combined)
+
+    const initLines: Record<string, string> = {}
+    for (const l of (data.lines as FuturesLine[])) initLines[l.runner_id] = String(l.line)
+    setFuturesLines(initLines)
+  }
+
+  async function saveFuturesLine(runner_id: string) {
+    const lineVal = parseFloat(futuresLines[runner_id] ?? '')
+    if (isNaN(lineVal)) { showToast('Enter a valid line'); return }
+    const res = await fetch('/api/admin/ladder-futures/lines', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runner_id, line: lineVal }),
+    })
+    if (res.ok) { showToast('Line saved'); fetchFutures() }
+    else { const d = await res.json(); showToast(`Error: ${d.error}`) }
+  }
+
+  async function saveFuturesConfig(patch: Partial<FuturesConfig>) {
+    const res = await fetch('/api/admin/ladder-futures/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    if (res.ok) { showToast('Config saved'); fetchFutures() }
+    else { const d = await res.json(); showToast(`Error: ${d.error}`) }
+  }
+
+  async function settleFutures(runner_id: string) {
+    const pos = parseInt(futuresPositions[runner_id] ?? '')
+    if (isNaN(pos) || pos < 1 || pos > 21) { showToast('Enter position 1–21'); return }
+    setSettlingFutures(runner_id)
+    const res = await fetch('/api/admin/ladder-futures/settle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runner_id, final_position: pos }),
+    })
+    const d = await res.json()
+    if (res.ok) { showToast(`Settled! ${d.winners}/${d.total} correct`); fetchFutures(); fetchAudit() }
+    else showToast(`Error: ${d.error}`)
+    setSettlingFutures(null)
   }
 
   function showToast(msg: string) {
@@ -398,6 +489,7 @@ export default function AdminPanel() {
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {sectionBtn('races', 'Create Race')}
         {sectionBtn('settle', 'Settle Races')}
+        {sectionBtn('futures', 'Futures')}
         {sectionBtn('users', 'Users')}
         {sectionBtn('audit', 'Audit Log')}
       </div>
@@ -791,6 +883,137 @@ export default function AdminPanel() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* FUTURES */}
+      {activeSection === 'futures' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Config */}
+          <div style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
+              Futures Config
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Points per correct pick</div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="number" min={1}
+                    value={futuresPtsInput}
+                    onChange={e => setFuturesPtsInput(e.target.value)}
+                    style={{ flex: 1, background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    onClick={() => saveFuturesConfig({ points_per_correct_pick: parseInt(futuresPtsInput) })}
+                    style={{ padding: '7px 12px', background: 'var(--blue-bg)', color: 'var(--blue)', border: '0.5px solid var(--blue-border)', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Predictions</div>
+                <button
+                  onClick={() => saveFuturesConfig({ is_locked: !futuresConfig.is_locked })}
+                  style={{
+                    padding: '7px 16px',
+                    background: futuresConfig.is_locked ? 'var(--green-bg)' : 'var(--orange-bg)',
+                    color: futuresConfig.is_locked ? 'var(--green)' : 'var(--orange)',
+                    border: `0.5px solid ${futuresConfig.is_locked ? 'var(--green-border)' : 'var(--orange-border)'}`,
+                    borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  {futuresConfig.is_locked ? 'Unlock Picks' : 'Lock Picks'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Lines + settle */}
+          <div style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
+              Runner Lines
+            </div>
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 130px 130px 90px',
+              gap: '8px', padding: '0 0 6px',
+              borderBottom: '0.5px solid var(--border)',
+              fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
+              letterSpacing: '.5px', textTransform: 'uppercase',
+            }}>
+              <span>Runner</span><span>Line</span><span>Final Pos</span><span>Status</span>
+            </div>
+            {futuresRunners.map(r => (
+              <div key={r.id} style={{
+                display: 'grid', gridTemplateColumns: '1fr 130px 130px 90px',
+                gap: '8px', alignItems: 'center',
+                padding: '7px 0', borderBottom: '0.5px solid var(--border)',
+                opacity: r.line?.settled_at ? 0.6 : 1,
+              }}>
+                <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                  {r.seed != null ? `#${r.seed} ` : ''}{r.username}
+                </span>
+
+                {/* Line input */}
+                {r.line?.settled_at ? (
+                  <span style={{ fontSize: '13px', color: 'var(--dim)' }}>
+                    {r.line.line}
+                  </span>
+                ) : (
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <input
+                      type="number" step={0.5} min={0.5} placeholder="14.5"
+                      value={futuresLines[r.id] ?? ''}
+                      onChange={e => setFuturesLines(prev => ({ ...prev, [r.id]: e.target.value }))}
+                      style={{ width: '70px', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '5px 8px', color: 'var(--white)', fontSize: '12px', outline: 'none' }}
+                    />
+                    <button
+                      onClick={() => saveFuturesLine(r.id)}
+                      style={{ padding: '4px 8px', background: 'var(--blue-bg)', color: 'var(--blue)', border: '0.5px solid var(--blue-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Set
+                    </button>
+                  </div>
+                )}
+
+                {/* Settle input */}
+                {r.line?.settled_at ? (
+                  <span style={{ fontSize: '13px', color: 'var(--green)', fontWeight: 700 }}>
+                    {r.line.final_position}
+                  </span>
+                ) : r.line ? (
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <input
+                      type="number" min={1} max={21} placeholder="1–21"
+                      value={futuresPositions[r.id] ?? ''}
+                      onChange={e => setFuturesPositions(prev => ({ ...prev, [r.id]: e.target.value }))}
+                      style={{ width: '55px', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '5px 8px', color: 'var(--white)', fontSize: '12px', outline: 'none' }}
+                    />
+                    <button
+                      onClick={() => settleFutures(r.id)}
+                      disabled={settlingFutures === r.id}
+                      style={{ padding: '4px 8px', background: 'var(--green-bg)', color: 'var(--green)', border: '0.5px solid var(--green-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {settlingFutures === r.id ? '...' : 'Settle'}
+                    </button>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '11px', color: 'var(--dim)' }}>set line first</span>
+                )}
+
+                <span style={{
+                  fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '3px',
+                  background: r.line?.settled_at ? 'var(--green-bg)' : r.line ? 'var(--blue-bg)' : 'var(--navy4)',
+                  color: r.line?.settled_at ? 'var(--green)' : r.line ? 'var(--blue)' : 'var(--dim)',
+                  border: `1px solid ${r.line?.settled_at ? 'var(--green-border)' : r.line ? 'var(--blue-border)' : 'var(--border)'}`,
+                  textAlign: 'center',
+                }}>
+                  {r.line?.settled_at ? 'SETTLED' : r.line ? 'LINE SET' : 'NO LINE'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

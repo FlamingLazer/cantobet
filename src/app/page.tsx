@@ -9,6 +9,7 @@ import HistoryFeed from './components/HistoryFeed'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
 import MyBets from './components/MyBets'
+import FuturesFeed from './components/FuturesFeed'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('races')
@@ -68,9 +69,10 @@ export default function Home() {
       }}>
         {activeTab === 'races' && <RacesFeed loggedIn={loggedIn} />}
         {activeTab === 'my-picks' && <MyBets loggedIn={loggedIn} />}
+        {activeTab === 'futures' && <FuturesFeed loggedIn={loggedIn} />}
         {activeTab === 'leaderboard' && <Leaderboard />}
-        {activeTab === 'history' && isAdmin && <HistoryFeed />}
-        {activeTab === 'admin' && <AdminPanel />}
+        {activeTab === 'history' && (isAdmin || process.env.NODE_ENV === 'development') && <HistoryFeed />}
+        {activeTab === 'admin' && (isAdmin || process.env.NODE_ENV === 'development') && <AdminPanel />}
 
         <div style={{ textAlign: 'center', padding: '32px 16px 16px' }}>
           <a

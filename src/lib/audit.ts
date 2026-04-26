@@ -15,6 +15,9 @@ interface AuditParams {
     | 'race_unlocked'
     | 'pbs_synced'
     | 'runners_seeded'
+    | 'futures_config_updated'
+    | 'futures_line_set'
+    | 'futures_settled'
   description: string
   metadata?: Record<string, unknown>
 }
