@@ -12,7 +12,7 @@ import MyBets from './components/MyBets'
 import FuturesFeed from './components/FuturesFeed'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('races')
+  const [activeTab, setActiveTab] = useState('futures')
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState(0)
   const [loggedIn, setLoggedIn] = useState(false)
