@@ -352,7 +352,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         borderRadius: '8px', padding: '12px 14px', marginBottom: '12px',
       }}>
         <div style={{ marginBottom: '4px', fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '.5px', textTransform: 'uppercase' }}>
-          Placements
+          Ladder Placements
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px' }}>
           Pick over or under the line for each runner's final ladder placement (1 = best). Choose exactly {REQUIRED_PICKS} runners. Correct picks earn {config.points_per_correct_pick} pts each.
@@ -396,7 +396,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         background: 'var(--navy2)', border: '0.5px solid var(--border)',
         borderRadius: '8px', padding: '12px 14px',
       }}>
-        {lines.map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
+        {lines.slice(0, 15).map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
       </div>
 
       {/* Login prompt */}
