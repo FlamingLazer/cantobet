@@ -87,6 +87,29 @@ input, select, textarea {
   50% { opacity: 0.2; }
 }
 
+/* Admin panel — default (desktop) */
+.admin-race-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-race-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.admin-placements-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-create-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 @media (max-width: 600px) {
   .mobile-hide { display: none !important; }
 
@@ -105,5 +128,18 @@ input, select, textarea {
   .mobile-username {
     font-size: 11px !important;
     padding: 4px 7px !important;
+  }
+
+  /* Admin panel mobile */
+  .admin-race-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .admin-race-actions {
+    flex-wrap: wrap;
+  }
+  .admin-create-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }

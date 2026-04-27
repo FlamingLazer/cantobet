@@ -519,7 +519,7 @@ export default function AdminPanel() {
             fontSize: '15px', fontWeight: 800, marginBottom: '12px',
           }}>Create Race</div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+          <div className="admin-create-grid">
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Format</div>
               <select value={newFormat} onChange={e => {
@@ -650,7 +650,7 @@ export default function AdminPanel() {
               background: 'var(--navy3)', border: '0.5px solid var(--border)',
               borderRadius: '6px', padding: '10px 12px', marginBottom: '8px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (settleRaceId === race.id || editRaceId === race.id) ? '10px' : '0' }}>
+              <div className="admin-race-header" style={{ marginBottom: (settleRaceId === race.id || editRaceId === race.id) ? '10px' : '0' }}>
                 <div>
                   <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', fontWeight: 800 }}>
                     {race.stage ?? `W${race.week} · Rung ${race.rung}`}
@@ -659,7 +659,7 @@ export default function AdminPanel() {
                     {race.race_runners.map(rr => rr.runner?.username).join(' · ')}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="admin-race-actions">
                   <span style={{
                     fontSize: '10px', fontWeight: 700,
                     padding: '2px 7px', borderRadius: '10px',
@@ -949,12 +949,14 @@ export default function AdminPanel() {
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
               Runner Lines
             </div>
+            <div className="admin-placements-scroll">
             <div style={{
               display: 'grid', gridTemplateColumns: '1fr 130px 130px 90px',
               gap: '8px', padding: '0 0 6px',
               borderBottom: '0.5px solid var(--border)',
               fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
               letterSpacing: '.5px', textTransform: 'uppercase',
+              minWidth: '440px',
             }}>
               <span>Runner</span><span>Line</span><span>Final Pos</span><span>Status</span>
             </div>
@@ -964,6 +966,7 @@ export default function AdminPanel() {
                 gap: '8px', alignItems: 'center',
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
                 opacity: r.line?.settled_at ? 0.6 : 1,
+                minWidth: '440px',
               }}>
                 <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
                   {r.seed != null ? `#${r.seed} ` : ''}{r.username}
@@ -1036,6 +1039,7 @@ export default function AdminPanel() {
                 </span>
               </div>
             ))}
+            </div>{/* end admin-placements-scroll */}
           </div>
         </div>
       )}
