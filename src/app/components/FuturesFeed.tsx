@@ -108,14 +108,14 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
   const lineMap = Object.fromEntries(lines.map(l => [l.runner_id, l]))
 
   if (loading) {
-    return <div style={{ color: 'var(--muted)', padding: '40px', textAlign: 'center' }}>Loading futures...</div>
+    return <div style={{ color: 'var(--muted)', padding: '40px', textAlign: 'center' }}>Loading placements...</div>
   }
 
   if (lines.length === 0) {
     return (
       <div style={{ color: 'var(--dim)', padding: '60px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: '28px', marginBottom: '10px' }}>📈</div>
-        <div>No futures lines set yet.</div>
+        <div>No placement lines set yet.</div>
       </div>
     )
   }
@@ -129,7 +129,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
           borderRadius: '8px', padding: '32px', textAlign: 'center',
         }}>
           <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, marginBottom: '8px' }}>
-            Ladder Futures
+            Placements
           </div>
           <span style={{
             fontSize: '9px', fontWeight: 800, padding: '2px 7px', borderRadius: '3px',
@@ -160,7 +160,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '.5px', textTransform: 'uppercase' }}>
-              Ladder Futures
+              Placements
             </div>
             <span style={{
               fontSize: '9px', fontWeight: 800, padding: '2px 7px', borderRadius: '3px',
@@ -352,7 +352,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         borderRadius: '8px', padding: '12px 14px', marginBottom: '12px',
       }}>
         <div style={{ marginBottom: '4px', fontFamily: "'Montserrat', sans-serif", fontSize: '16px', fontWeight: 800, letterSpacing: '.5px', textTransform: 'uppercase' }}>
-          Ladder Futures
+          Placements
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px' }}>
           Pick over or under the line for each runner's final ladder placement (1 = best). Choose exactly {REQUIRED_PICKS} runners. Correct picks earn {config.points_per_correct_pick} pts each.

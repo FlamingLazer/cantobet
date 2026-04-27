@@ -142,9 +142,9 @@ function UserHistoryModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                 {[
                   { val: racePts.toFixed(1), label: 'Race pts', color: 'var(--gold)' },
-                  { val: futuresVisible ? futuresPts.toFixed(1) : '—', label: 'Futures pts', color: 'var(--gold)' },
+                  { val: futuresVisible ? futuresPts.toFixed(1) : '—', label: 'Placement pts', color: 'var(--gold)' },
                   { val: `${correct}/${history.length}`, label: 'Race picks', color: 'var(--green)' },
-                  { val: futuresVisible ? `${futuresCorrect}/${stats?.futures_settled ?? 0}` : '—', label: 'Futures picks', color: 'var(--green)' },
+                  { val: futuresVisible ? `${futuresCorrect}/${stats?.futures_settled ?? 0}` : '—', label: 'Placement picks', color: 'var(--green)' },
                 ].map((s, i) => (
                   <div key={i} style={{
                     background: 'var(--navy3)', border: '0.5px solid var(--border)',
@@ -198,11 +198,11 @@ function UserHistoryModal({
                 </button>
               )}
 
-              {/* Futures picks */}
+              {/* Placement picks */}
               {futuresVisible && futurePicks.length > 0 && (
                 <>
                   <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--dim)', margin: '14px 0 6px' }}>
-                    Ladder Futures
+                    Placements
                   </div>
                   {(showAllFutures ? futurePicks : futurePicks.slice(0, COLLAPSED)).map(fp => {
                     const won = fp.is_correct === true

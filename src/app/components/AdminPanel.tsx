@@ -503,7 +503,7 @@ export default function AdminPanel() {
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {sectionBtn('races', 'Create Race')}
         {sectionBtn('settle', 'Settle Races')}
-        {sectionBtn('futures', 'Futures')}
+        {sectionBtn('futures', 'Placements')}
         {sectionBtn('users', 'Users')}
         {sectionBtn('audit', 'Audit Log')}
       </div>
@@ -906,7 +906,7 @@ export default function AdminPanel() {
           {/* Config */}
           <div style={{ background: 'var(--navy2)', border: '0.5px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
-              Futures Config
+              Placements Config
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
               <div>

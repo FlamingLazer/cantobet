@@ -8,8 +8,8 @@ interface NavProps {
 
 export default function Nav({ activeTab, isAdmin, onTabChange }: NavProps) {
   const tabs = [
+    { id: 'futures', label: 'Placements' },
     { id: 'races', label: 'Races' },
-    { id: 'futures', label: 'Futures' },
     { id: 'my-picks', label: 'My Picks' },
     { id: 'leaderboard', label: 'Leaderboard' },
     ...(isAdmin || process.env.NODE_ENV === 'development' ? [{ id: 'history', label: 'History' }] : []),
