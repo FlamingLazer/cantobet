@@ -142,4 +142,16 @@ input, select, textarea {
   .admin-create-grid {
     grid-template-columns: 1fr 1fr !important;
   }
+  .admin-audit-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-audit-filters {
+    flex: unset !important;
+    width: 100%;
+  }
+  .admin-audit-filters input {
+    flex: 1;
+    width: auto !important;
+  }
 }

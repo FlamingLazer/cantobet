@@ -951,7 +951,7 @@ export default function AdminPanel() {
             </div>
             <div className="admin-placements-scroll">
             <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 130px 130px 90px',
+              display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 130px 130px 90px',
               gap: '8px', padding: '0 0 6px',
               borderBottom: '0.5px solid var(--border)',
               fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
@@ -962,13 +962,13 @@ export default function AdminPanel() {
             </div>
             {futuresRunners.map(r => (
               <div key={r.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 130px 130px 90px',
+                display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 130px 130px 90px',
                 gap: '8px', alignItems: 'center',
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
                 opacity: r.line?.settled_at ? 0.6 : 1,
                 minWidth: '440px',
               }}>
-                <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700 }}>
+                <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {r.seed != null ? `#${r.seed} ` : ''}{r.username}
                 </span>
 
@@ -1054,12 +1054,14 @@ export default function AdminPanel() {
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800, marginBottom: '12px' }}>
               Users
             </div>
+            <div className="admin-placements-scroll">
             <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 120px 100px 60px',
+              display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 120px 100px 60px',
               gap: '8px', padding: '0 0 6px',
               borderBottom: '0.5px solid var(--border)',
               fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
               letterSpacing: '.5px', textTransform: 'uppercase',
+              minWidth: '380px',
             }}>
               <span>Username</span>
               <span style={{ textAlign: 'right' }}>Balance</span>
@@ -1068,10 +1070,10 @@ export default function AdminPanel() {
             </div>
             {users.map(u => (
               <div key={u.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 120px 100px 60px',
+                display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 120px 100px 60px',
                 gap: '8px', alignItems: 'center',
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
-                fontSize: '12px',
+                fontSize: '12px', minWidth: '380px',
               }}>
                 <span
                   onClick={() => setViewingUser({ id: u.id, username: u.twitch_username })}
@@ -1082,6 +1084,7 @@ export default function AdminPanel() {
                     textDecoration: 'underline',
                     textDecorationColor: 'var(--border)',
                     textUnderlineOffset: '3px',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}
                 >
                   {u.twitch_username}
@@ -1115,6 +1118,7 @@ export default function AdminPanel() {
                 </div>
               </div>
             ))}
+            </div>{/* end admin-placements-scroll */}
           </div>
 
           <div style={{
@@ -1174,14 +1178,14 @@ export default function AdminPanel() {
           background: 'var(--navy2)', border: '0.5px solid var(--border)',
           borderRadius: '8px', padding: '14px',
         }}>
-          <div style={{
+          <div className="admin-audit-header" style={{
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', marginBottom: '12px', gap: '8px',
           }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '15px', fontWeight: 800 }}>
               Audit Log
             </div>
-            <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-end' }}>
+            <div className="admin-audit-filters" style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-end' }}>
               <input
                 type="text" placeholder="Search..."
                 value={auditFilter} onChange={e => setAuditFilter(e.target.value)}
@@ -1202,12 +1206,14 @@ export default function AdminPanel() {
             </div>
           </div>
 
+          <div className="admin-placements-scroll">
           <div style={{
-            display: 'grid', gridTemplateColumns: '130px 130px 1fr 100px',
+            display: 'grid', gridTemplateColumns: '120px 110px minmax(0, 1fr) 100px',
             gap: '8px', padding: '0 0 6px',
             borderBottom: '0.5px solid var(--border)',
             fontSize: '10px', fontWeight: 700, color: 'var(--muted)',
             letterSpacing: '.5px', textTransform: 'uppercase',
+            minWidth: '440px',
           }}>
             <span>Time</span><span>Admin</span><span>Action</span><span>Type</span>
           </div>
@@ -1232,10 +1238,10 @@ export default function AdminPanel() {
 
             return (
               <div key={entry.id} style={{
-                display: 'grid', gridTemplateColumns: '130px 130px 1fr 100px',
+                display: 'grid', gridTemplateColumns: '120px 110px minmax(0, 1fr) 100px',
                 gap: '8px', alignItems: 'baseline',
                 padding: '7px 0', borderBottom: '0.5px solid var(--border)',
-                fontSize: '12px',
+                fontSize: '12px', minWidth: '440px',
               }}>
                 <span style={{ fontSize: '11px', color: 'var(--dim)', fontVariantNumeric: 'tabular-nums' }}>
                   {new Date(entry.created_at).toLocaleString('en-US', {
@@ -1262,6 +1268,7 @@ export default function AdminPanel() {
               </div>
             )
           })}
+          </div>{/* end admin-placements-scroll */}
         </div>
       )}
 
