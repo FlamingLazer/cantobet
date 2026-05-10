@@ -396,7 +396,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         background: 'var(--navy2)', border: '0.5px solid var(--border)',
         borderRadius: '8px', padding: '12px 14px',
       }}>
-        {lines.slice(0, 15).map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
+        {lines.slice(0, 18).map(entry => <RunnerRow key={entry.runner_id} entry={entry} />)}
       </div>
 
       {/* Login prompt */}
