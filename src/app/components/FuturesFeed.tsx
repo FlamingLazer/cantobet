@@ -35,6 +35,12 @@ interface FuturesFeedProps {
 
 const REQUIRED_PICKS = 8
 
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
 export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
   const [config, setConfig] = useState<FuturesConfig>({ is_locked: false, points_per_correct_pick: 100 })
   const [lines, setLines] = useState<FuturesLine[]>([])
@@ -313,6 +319,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           <button
             onClick={() => isEditable && selectPick(entry.runner_id, 'over')}
+            title={`${entry.runner.username} Over ${entry.line} means you are predicting them to finish ${ordinal(Math.ceil(entry.line))} or worse`}
             style={{
               padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
               border: '1px solid',
@@ -327,6 +334,7 @@ export default function FuturesFeed({ loggedIn }: FuturesFeedProps) {
           </button>
           <button
             onClick={() => isEditable && selectPick(entry.runner_id, 'under')}
+            title={`${entry.runner.username} Under ${entry.line} means you are predicting them to finish ${ordinal(Math.floor(entry.line))} or better`}
             style={{
               padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
               border: '1px solid',
