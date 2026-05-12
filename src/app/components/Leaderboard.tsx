@@ -256,28 +256,39 @@ function UserHistoryModal({
   )
 }
 
+const PAGE_SIZE = 50
+
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    fetchLeaderboard()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id ?? null)
     })
   }, [])
 
-  async function fetchLeaderboard() {
+  useEffect(() => {
+    fetchLeaderboard(page)
+  }, [page])
+
+  async function fetchLeaderboard(p: number) {
+    setLoading(true)
+    const from = p * PAGE_SIZE
     const { data } = await supabase
       .from('users')
       .select('id, twitch_username, points')
       .order('points', { ascending: false })
-      .limit(50)
+      .range(from, from + PAGE_SIZE)
 
-    setEntries(data ?? [])
+    const fetched = data ?? []
+    setHasMore(fetched.length > PAGE_SIZE)
+    setEntries(fetched.slice(0, PAGE_SIZE))
     setLoading(false)
   }
 
@@ -328,6 +339,7 @@ export default function Leaderboard() {
         </div>
 
         {entries.map((entry, i) => {
+          const rank = page * PAGE_SIZE + i
           const isYou = entry.id === currentUserId
           return (
             <div
@@ -354,10 +366,10 @@ export default function Leaderboard() {
               <div style={{
                 fontFamily: "'Montserrat', sans-serif",
                 fontSize: '16px', fontWeight: 800,
-                color: rankColor(i),
+                color: rankColor(rank),
                 textAlign: 'center',
               }}>
-                {i + 1}
+                {rank + 1}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
@@ -381,7 +393,7 @@ export default function Leaderboard() {
                     YOU
                   </span>
                 )}
-                {i === 0 && <span style={{ fontSize: '14px' }}>👑</span>}
+                {rank === 0 && <span style={{ fontSize: '14px' }}>👑</span>}
               </div>
 
               <div style={{
@@ -396,6 +408,38 @@ export default function Leaderboard() {
           )
         })}
       </div>
+
+      {(page > 0 || hasMore) && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
+          <button
+            onClick={() => setPage(p => p - 1)}
+            disabled={page === 0}
+            style={{
+              padding: '6px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
+              background: page === 0 ? 'var(--navy3)' : 'var(--navy2)',
+              border: '0.5px solid var(--border)',
+              color: page === 0 ? 'var(--dim)' : 'var(--muted)',
+              cursor: page === 0 ? 'default' : 'pointer',
+            }}
+          >
+            ← Prev
+          </button>
+          <span style={{ fontSize: '12px', color: 'var(--dim)' }}>Page {page + 1}</span>
+          <button
+            onClick={() => setPage(p => p + 1)}
+            disabled={!hasMore}
+            style={{
+              padding: '6px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
+              background: !hasMore ? 'var(--navy3)' : 'var(--navy2)',
+              border: '0.5px solid var(--border)',
+              color: !hasMore ? 'var(--dim)' : 'var(--muted)',
+              cursor: !hasMore ? 'default' : 'pointer',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {viewingUser && (
         <UserHistoryModal
