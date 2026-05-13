@@ -90,6 +90,7 @@ export default function AdminPanel() {
   const [futuresPtsInput, setFuturesPtsInput] = useState('')
   const [settlingFutures, setSettlingFutures] = useState<string | null>(null)
   const [unsettlingFutures, setUnsettlingFutures] = useState<string | null>(null)
+  const [earlySettlingFutures, setEarlySettlingFutures] = useState<string | null>(null)
 
   const [newWeek, setNewWeek] = useState(1)
   const [newRung, setNewRung] = useState(1)
@@ -251,6 +252,19 @@ export default function AdminPanel() {
     })
     if (res.ok) { showToast('Config saved'); fetchFutures() }
     else { const d = await res.json(); showToast(`Error: ${d.error}`) }
+  }
+
+  async function earlySettleFutures(runner_id: string, direction: 'over' | 'under') {
+    setEarlySettlingFutures(runner_id)
+    const res = await fetch('/api/admin/ladder-futures/settle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runner_id, direction_won: direction }),
+    })
+    const d = await res.json()
+    if (res.ok) { showToast(`Early settled — ${d.winners}/${d.total} correct`); fetchFutures(); fetchAudit() }
+    else showToast(`Error: ${d.error}`)
+    setEarlySettlingFutures(null)
   }
 
   async function unsettleFutures(runner_id: string) {
@@ -998,7 +1012,7 @@ export default function AdminPanel() {
                 {r.line?.settled_at ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '13px', color: 'var(--green)', fontWeight: 700 }}>
-                      {r.line.final_position}
+                      {r.line.final_position ?? '—'}
                     </span>
                     <button
                       onClick={() => unsettleFutures(r.id)}
@@ -1009,20 +1023,38 @@ export default function AdminPanel() {
                     </button>
                   </div>
                 ) : r.line ? (
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <input
-                      type="number" min={1} max={21} placeholder="1–21"
-                      value={futuresPositions[r.id] ?? ''}
-                      onChange={e => setFuturesPositions(prev => ({ ...prev, [r.id]: e.target.value }))}
-                      style={{ width: '55px', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '5px 8px', color: 'var(--white)', fontSize: '12px', outline: 'none' }}
-                    />
-                    <button
-                      onClick={() => settleFutures(r.id)}
-                      disabled={settlingFutures === r.id}
-                      style={{ padding: '4px 8px', background: 'var(--green-bg)', color: 'var(--green)', border: '0.5px solid var(--green-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      {settlingFutures === r.id ? '...' : 'Settle'}
-                    </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <input
+                        type="number" min={1} max={21} placeholder="1–21"
+                        value={futuresPositions[r.id] ?? ''}
+                        onChange={e => setFuturesPositions(prev => ({ ...prev, [r.id]: e.target.value }))}
+                        style={{ width: '55px', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '5px 8px', color: 'var(--white)', fontSize: '12px', outline: 'none' }}
+                      />
+                      <button
+                        onClick={() => settleFutures(r.id)}
+                        disabled={settlingFutures === r.id}
+                        style={{ padding: '4px 8px', background: 'var(--green-bg)', color: 'var(--green)', border: '0.5px solid var(--green-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {settlingFutures === r.id ? '...' : 'Settle'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => earlySettleFutures(r.id, 'over')}
+                        disabled={earlySettlingFutures === r.id}
+                        style={{ flex: 1, padding: '3px 0', background: 'var(--blue-bg)', color: 'var(--blue)', border: '0.5px solid var(--blue-border)', borderRadius: '4px', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        OVER ✓
+                      </button>
+                      <button
+                        onClick={() => earlySettleFutures(r.id, 'under')}
+                        disabled={earlySettlingFutures === r.id}
+                        style={{ flex: 1, padding: '3px 0', background: 'var(--orange-bg)', color: 'var(--orange)', border: '0.5px solid var(--orange-border)', borderRadius: '4px', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        UNDER ✓
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <span style={{ fontSize: '11px', color: 'var(--dim)' }}>set line first</span>
