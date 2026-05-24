@@ -102,7 +102,7 @@ export default function RacesFeed({ loggedIn = false }: RacesFeedProps) {
 
   function sectionKey(race: RaceWithRunners): string {
     if (race.stage === 'Wildcard Match') return 'Wildcard Match'
-    if (race.stage) return 'Top 8 Playoffs'
+    if (race.stage && !race.week) return 'Top 8 Playoffs'
     return `week_${race.week}`
   }
 

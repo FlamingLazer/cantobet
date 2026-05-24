@@ -309,10 +309,10 @@ export default function AdminPanel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        week: newFormat === 3 ? newWeek : undefined,
-        rung: newFormat === 3 ? newRung : undefined,
+        week: (newFormat === 3 || newStageCustom) ? newWeek : undefined,
+        rung: (newFormat === 3 || newStageCustom) ? newRung : undefined,
         scheduled_at: newTBD ? TBD_SENTINEL : new Date(newTime).toISOString(),
-        is_top8_qualifier: newFormat === 2 || newRung === 1,
+        is_top8_qualifier: (newFormat === 2 && !newStageCustom) || newRung === 1,
         stage: newFormat === 2 ? newStage : undefined,
         runners: newRunners.map(r => ({
           runner_id: r.runner_id,
@@ -583,13 +583,31 @@ export default function AdminPanel() {
                   <option value="__custom__">Custom...</option>
                 </select>
                 {newStageCustom && (
-                  <input
-                    type="text"
-                    placeholder="e.g. W3 · Rung 5"
-                    value={newStage}
-                    onChange={e => setNewStage(e.target.value)}
-                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
-                  />
+                  <>
+                    <input
+                      type="text"
+                      placeholder="e.g. W3 · Rung 5"
+                      value={newStage}
+                      onChange={e => setNewStage(e.target.value)}
+                      style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none', marginBottom: '6px' }}
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Week</div>
+                        <input type="number" value={newWeek} min={1} onChange={e => setNewWeek(Number(e.target.value))}
+                          style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Rung</div>
+                        <select value={newRung} onChange={e => setNewRung(Number(e.target.value))}
+                          style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
+                          {[1,2,3,4,5,6,7].map(r => (
+                            <option key={r} value={r}>Rung {r}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             )}
