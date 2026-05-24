@@ -111,7 +111,7 @@ export default function RaceCard({
             color: rungStyle.color,
             border: `1px solid ${rungStyle.border}`,
           }}>
-            {race.stage ?? `Rung ${race.rung}`}
+            {race.stage && !race.rung ? race.stage : `Rung ${race.rung}`}
           </span>
         </div>
 
