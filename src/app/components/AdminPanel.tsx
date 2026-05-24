@@ -98,9 +98,10 @@ export default function AdminPanel() {
   const [newTBD, setNewTBD] = useState(false)
   const [newFormat, setNewFormat] = useState<2 | 3>(3)
   const [newStage, setNewStage] = useState('')
+  const [newStageCustom, setNewStageCustom] = useState(false)
   const [editTBD, setEditTBD] = useState(false)
 
-  const stageOptions = [
+  const namedStages = [
     'Wildcard Match',
     'Quarterfinal 1', 'Quarterfinal 2', 'Quarterfinal 3', 'Quarterfinal 4',
     'Semifinal 1', 'Semifinal 2',
@@ -325,6 +326,7 @@ export default function AdminPanel() {
       setNewTime('')
       setNewTBD(false)
       setNewStage('')
+      setNewStageCustom(false)
       setNewRunners(Array.from({ length: newFormat }, () => ({ runner_id: '', odds: '' })))
     } else {
       const d = await res.json()
@@ -540,6 +542,7 @@ export default function AdminPanel() {
                 const f = Number(e.target.value) as 2 | 3
                 setNewFormat(f)
                 setNewStage('')
+                setNewStageCustom(false)
                 setNewRunners(Array.from({ length: f }, () => ({ runner_id: '', odds: '' })))
               }}
                 style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
@@ -568,11 +571,26 @@ export default function AdminPanel() {
             ) : (
               <div style={{ gridColumn: 'span 2' }}>
                 <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Stage</div>
-                <select value={newStage} onChange={e => setNewStage(e.target.value)}
-                  style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}>
+                <select
+                  value={newStageCustom ? '__custom__' : newStage}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') { setNewStageCustom(true); setNewStage('') }
+                    else { setNewStageCustom(false); setNewStage(e.target.value) }
+                  }}
+                  style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none', marginBottom: newStageCustom ? '6px' : '0' }}>
                   <option value="">Select stage</option>
-                  {stageOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  {namedStages.map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="__custom__">Custom...</option>
                 </select>
+                {newStageCustom && (
+                  <input
+                    type="text"
+                    placeholder="e.g. W3 · Rung 5"
+                    value={newStage}
+                    onChange={e => setNewStage(e.target.value)}
+                    style={{ width: '100%', background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                  />
+                )}
               </div>
             )}
           </div>
