@@ -63,7 +63,7 @@ export async function GET() {
         *,
         race_runners (
           id, odds, finish_position, finish_time,
-          runner:runners (id, username, character, pb, seed, current_rung, status, country_code)
+          runner:runners (id, username, character, pb, seed, top8_seed, current_rung, status, country_code)
         )
       `)
       .neq('status', 'settled')

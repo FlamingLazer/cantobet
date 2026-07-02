@@ -14,6 +14,7 @@ export interface Runner {
   character: string
   pb: string
   seed: number
+  top8_seed: number | null
   current_rung: number
   status: 'active' | 'qualified' | 'eliminated'
   country_code?: string | null
