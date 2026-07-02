@@ -159,7 +159,7 @@ export default function RaceCard({
             <span className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '0', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
               <span style={{ width: '55px', textAlign: 'left', fontSize: '11px', color: 'var(--dim)' }}>
                 {race.is_top8_qualifier && race.stage !== 'Wildcard Match'
-                  ? (rr.runner?.top8_seed != null ? `T8 Seed ${rr.runner.top8_seed}` : '')
+                  ? (rr.runner?.top8_seed != null ? `Seed ${rr.runner.top8_seed}` : '')
                   : (rr.runner?.seed != null ? `Seed ${rr.runner.seed}` : '')}
               </span>
               {Object.keys(ladderPbs).length > 0 && (
