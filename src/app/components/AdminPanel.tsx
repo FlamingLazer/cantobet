@@ -12,6 +12,7 @@ interface Runner {
   username: string
   current_rung: number
   seed: number | null
+  top8_seed: number | null
 }
 
 interface RaceRow {
@@ -115,6 +116,26 @@ export default function AdminPanel() {
   ])
   const [creating, setCreating] = useState(false)
   const [seedingRunners, setSeedingRunners] = useState(false)
+  const [top8SeedEdits, setTop8SeedEdits] = useState<Record<string, string>>({})
+
+  const playoffStages = ['Quarterfinal 1', 'Quarterfinal 2', 'Quarterfinal 3', 'Quarterfinal 4', 'Semifinal 1', 'Semifinal 2', '3rd Place Match', 'Grand Finals']
+  const isPlayoffStage = newFormat === 2 && !newStageCustom && playoffStages.includes(newStage)
+
+  async function saveTop8Seed(runner_id: string, value: string) {
+    const top8_seed = value === '' ? null : parseInt(value, 10)
+    if (value !== '' && (isNaN(top8_seed!) || top8_seed! < 1 || top8_seed! > 8)) return
+    const res = await fetch('/api/admin/set-top8-seed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runner_id, top8_seed }),
+    })
+    if (res.ok) {
+      setRunners(prev => prev.map(r => r.id === runner_id ? { ...r, top8_seed: top8_seed ?? null } : r))
+    } else {
+      const d = await res.json()
+      showToast(`Error: ${d.error}`)
+    }
+  }
 
   const [adjUsername, setAdjUsername] = useState('')
   const [adjAmount, setAdjAmount] = useState('')
@@ -159,7 +180,7 @@ export default function AdminPanel() {
   async function fetchRunners() {
     const { data } = await supabase
       .from('runners')
-      .select('id, username, current_rung, seed')
+      .select('id, username, current_rung, seed, top8_seed')
       .neq('status', 'eliminated')
       .order('seed')
     setRunners((data as Runner[]) ?? [])
@@ -624,21 +645,44 @@ export default function AdminPanel() {
             Runners & Odds
           </div>
           {newRunners.map((nr, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '8px', marginBottom: '6px' }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: isPlayoffStage ? '1fr 70px 120px' : '1fr 120px', gap: '8px', marginBottom: '6px' }}>
               <select
                 value={nr.runner_id}
                 onChange={e => {
                   const updated = [...newRunners]
                   updated[i] = { ...updated[i], runner_id: e.target.value }
                   setNewRunners(updated)
+                  if (e.target.value) {
+                    const r = runners.find(r => r.id === e.target.value)
+                    setTop8SeedEdits(prev => ({ ...prev, [e.target.value]: r?.top8_seed != null ? String(r.top8_seed) : '' }))
+                  }
                 }}
                 style={{ background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
               >
                 <option value="">Select runner {i + 1}</option>
                 {runners.map(r => (
-                  <option key={r.id} value={r.id}>{r.username}{r.seed != null ? ` (Seed ${r.seed})` : ''}</option>
+                  <option key={r.id} value={r.id}>
+                    {isPlayoffStage
+                      ? `${r.top8_seed != null ? `#${r.top8_seed} ` : ''}${r.username}`
+                      : `${r.username}${r.seed != null ? ` (Seed ${r.seed})` : ''}`}
+                  </option>
                 ))}
               </select>
+              {isPlayoffStage && (
+                <input
+                  type="number"
+                  placeholder="T8 #"
+                  min={1} max={8}
+                  value={nr.runner_id ? (top8SeedEdits[nr.runner_id] ?? '') : ''}
+                  onChange={e => {
+                    if (nr.runner_id) setTop8SeedEdits(prev => ({ ...prev, [nr.runner_id]: e.target.value }))
+                  }}
+                  onBlur={e => {
+                    if (nr.runner_id) saveTop8Seed(nr.runner_id, e.target.value)
+                  }}
+                  style={{ background: 'var(--navy3)', border: '0.5px solid var(--borderb)', borderRadius: '5px', padding: '7px 10px', color: 'var(--white)', fontSize: '13px', outline: 'none' }}
+                />
+              )}
               <input
                 type="number"
                 placeholder="Odds e.g. 1.80"

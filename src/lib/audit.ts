@@ -18,6 +18,7 @@ interface AuditParams {
     | 'futures_config_updated'
     | 'futures_line_set'
     | 'futures_settled'
+    | 'runner_updated'
   description: string
   metadata?: Record<string, unknown>
 }
