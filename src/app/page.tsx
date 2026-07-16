@@ -12,7 +12,7 @@ import MyBets from './components/MyBets'
 import FuturesFeed from './components/FuturesFeed'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('races')
+  const [activeTab, setActiveTab] = useState('leaderboard')
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState(0)
   const [loggedIn, setLoggedIn] = useState(false)
@@ -67,10 +67,10 @@ export default function Home() {
         margin: '0 auto',
         padding: '16px',
       }}>
-        {activeTab === 'races' && <RacesFeed loggedIn={loggedIn} />}
+        {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'my-picks' && <MyBets loggedIn={loggedIn} />}
         {activeTab === 'futures' && <FuturesFeed loggedIn={loggedIn} />}
-        {activeTab === 'leaderboard' && <Leaderboard />}
+        {activeTab === 'races' && (isAdmin || process.env.NODE_ENV === 'development') && <RacesFeed loggedIn={loggedIn} />}
         {activeTab === 'history' && (isAdmin || process.env.NODE_ENV === 'development') && <HistoryFeed />}
         {activeTab === 'admin' && (isAdmin || process.env.NODE_ENV === 'development') && <AdminPanel />}
 
